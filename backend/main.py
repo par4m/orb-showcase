@@ -1,9 +1,11 @@
+from typing import List
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 
 from database import get_session
+from models import Repository
 
 
 app = FastAPI()
@@ -19,7 +21,10 @@ app.add_middleware(
 
 
 
-@app.get("/")
+@app.get("/repositories", response_model=List[Repository])
 def root( session: Session = Depends(get_session)):
-    return {"message": "Working"}
+    statement = select(Repository)
+    res = session.exec(statement)
+    repos = res.all()
+    return repos
 
