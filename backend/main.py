@@ -20,6 +20,21 @@ app.add_middleware(
 )
 
 
+@app.get("/languages", response_model=List[str])
+def get_languages(session: Session = Depends(get_session)):
+    result = session.exec(select(Repository.language).where(Repository.language.isnot(None)).distinct())
+    return sorted([lang for lang in result if lang])
+
+@app.get("/licenses", response_model=List[str])
+def get_licenses(session: Session = Depends(get_session)):
+    result = session.exec(select(Repository.license).where(Repository.license.isnot(None)).distinct())
+    return sorted([lic for lic in result if lic])
+
+@app.get("/universities", response_model=List[str])
+def get_universities(session: Session = Depends(get_session)):
+    result = session.exec(select(Repository.university).where(Repository.university.isnot(None)).distinct())
+    return sorted([uni for uni in result if uni])
+
 @app.get("/repositories", response_model=List[Repository])
 def list_repositories(
     q: str = Query(None, description="Search term for name/description"),
