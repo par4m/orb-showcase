@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 
@@ -20,10 +20,20 @@ app.add_middleware(
 )
 
 
-
 @app.get("/repositories", response_model=List[Repository])
-def root( session: Session = Depends(get_session)):
+def list_repositories(
+    q: str = Query(None, description="Search term for name/description"),
+    limit: int = Query(20, ge=1, le=100, description="Number of results to return"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    session: Session = Depends(get_session)
+):
     statement = select(Repository)
+    if q:
+        search = f"%{q.lower()}%"
+        statement = statement.where(
+            (Repository.name.ilike(search)) | (Repository.description.ilike(search))
+        )
+    statement = statement.offset(offset).limit(limit)
     res = session.exec(statement)
     repos = res.all()
     return repos
