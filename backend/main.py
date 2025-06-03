@@ -48,11 +48,25 @@ def list_repositories(
     has_wiki: int = Query(None, description="Has wiki filter (1 or 0)"),
     has_pages: int = Query(None, description="Has pages filter (1 or 0)"),
     has_discussions: int = Query(None, description="Has discussions filter (1 or 0)"),
+    sort: str = Query("stargazers_count", description="Sort by field: stargazers_count, forks, created_at, updated_at, open_issues_count"),
+    order: str = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(None, ge=1, le=100, description="Number of results to return"),
     offset: int = Query(None, ge=0, description="Number of results to skip"),
     session: Session = Depends(get_session)
 ):
     statement = select(Repository)
+    sort_map = {
+        "stargazers_count": Repository.stargazers_count,
+        "forks": Repository.forks,
+        "created_at": Repository.created_at,
+        "updated_at": Repository.updated_at,
+        "open_issues_count": Repository.open_issues_count,
+    }
+    sort_field = sort_map.get(sort, Repository.stargazers_count)
+    if order == "asc":
+        statement = statement.order_by(sort_field.asc())
+    else:
+        statement = statement.order_by(sort_field.desc())
     if q:
         search = f"%{q.lower()}%"
         statement = statement.where(
