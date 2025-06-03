@@ -100,3 +100,11 @@ def list_repositories(
     repos = res.all()
     return repos
 
+@app.get("/repositories/{id}", response_model=Repository)
+def get_repository(id: int, session: Session = Depends(get_session)):
+    repo = session.get(Repository, id)
+    if not repo:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Repository not found")
+    return repo
+
