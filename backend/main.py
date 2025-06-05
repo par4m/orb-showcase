@@ -2,7 +2,7 @@ from typing import List
 from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
-
+import ast
 
 from database import get_session
 from models import Repository
@@ -98,6 +98,13 @@ def list_repositories(
         statement = statement.offset(offset)
     res = session.exec(statement)
     repos = res.all()
+    # Parse contributors from string to list for each repo
+    for repo in repos:
+        if hasattr(repo, 'contributors') and isinstance(repo.contributors, str):
+            try:
+                repo.contributors = ast.literal_eval(repo.contributors)
+            except Exception:
+                repo.contributors = []
     return repos
 
 @app.get("/repositories/{id}", response_model=Repository)
@@ -106,5 +113,11 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     if not repo:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Repository not found")
+    # Parse contributors from string to list
+    if hasattr(repo, 'contributors') and isinstance(repo.contributors, str):
+        try:
+            repo.contributors = ast.literal_eval(repo.contributors)
+        except Exception:
+            repo.contributors = []
     return repo
 

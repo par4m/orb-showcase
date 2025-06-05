@@ -25,5 +25,7 @@ class Repository(SQLModel, table=True):
     has_discussions: int | None
     subscribers_count: float | None
     created_at: str | None
+    watchers_count: int | None = None
+    contributors: list[str] | None = None
     updated_at: str | None 
     homepage: str | None
