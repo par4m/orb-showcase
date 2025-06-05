@@ -49,6 +49,3 @@ Make sure `backend/.env` has the connection string
 POSTGRES_DB_URL=postgresql://postgres:orb@localhost:5432/sample
 ```
 
-
-
-```
