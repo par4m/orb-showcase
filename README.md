@@ -20,15 +20,12 @@ pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-```
-
-```
 
 ### Running the Database Locally
 
 Start PostgreSQL Container
 
-````
+
 
 ```bash
 docker run -d \
@@ -52,6 +49,3 @@ Make sure `backend/.env` has the connection string
 POSTGRES_DB_URL=postgresql://postgres:orb@localhost:5432/sample
 ```
 
-```
-
-```
