@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 import ast
 
 from database import get_session
-from models import Repository
+from models import Repository, RepositoryResponse
 
 
 app = FastAPI()
@@ -35,7 +35,7 @@ def get_universities(session: Session = Depends(get_session)):
     result = session.exec(select(Repository.university).where(Repository.university.isnot(None)).distinct())
     return sorted([uni for uni in result if uni])
 
-@app.get("/repositories", response_model=List[Repository])
+@app.get("/repositories", response_model=List[RepositoryResponse])
 def list_repositories(
     q: str = Query(None, description="Search term for name/description"),
     university: str = Query(None, description="University filter"),
@@ -107,7 +107,7 @@ def list_repositories(
                 repo.contributors = []
     return repos
 
-@app.get("/repositories/{id}", response_model=Repository)
+@app.get("/repositories/{id}", response_model=RepositoryResponse)
 def get_repository(id: int, session: Session = Depends(get_session)):
     repo = session.get(Repository, id)
     if not repo:
