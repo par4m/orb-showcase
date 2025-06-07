@@ -38,9 +38,9 @@ def get_universities(session: Session = Depends(get_session)):
 @app.get("/repositories", response_model=List[RepositoryResponse])
 def list_repositories(
     q: str = Query(None, description="Search term for name/description"),
-    university: str = Query(None, description="University filter"),
-    language: str = Query(None, description="Language filter"),
-    license: str = Query(None, description="License filter"),
+    university: List[str] = Query(None, description="University filter"),
+    language: List[str] = Query(None, description="Language filter"),
+    license: List[str] = Query(None, description="License filter"),
     archived: int = Query(None, description="Archived filter (1 or 0)"),
     has_issues: int = Query(None, description="Has issues filter (1 or 0)"),
     has_projects: int = Query(None, description="Has projects filter (1 or 0)"),
@@ -76,11 +76,11 @@ def list_repositories(
             (Repository.name.ilike(search)) | (Repository.description.ilike(search))
         )
     if university:
-        statement = statement.where(Repository.university.ilike(university))
+        statement = statement.where(Repository.university.in_(university))
     if language:
-        statement = statement.where(Repository.language.ilike(language))
+        statement = statement.where(Repository.language.in_(language))
     if license:
-        statement = statement.where(Repository.license.ilike(license))
+        statement = statement.where(Repository.license.in_(license))
     if archived is not None:
         statement = statement.where(Repository.archived == archived)
     if has_issues is not None:
