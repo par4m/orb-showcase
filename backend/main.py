@@ -3,10 +3,10 @@ from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 import ast
-
+from sqlalchemy import func
 from database import get_session
 from models import Repository, RepositoryResponse
-
+from fastapi import HTTPException
 
 app = FastAPI()
 
@@ -54,7 +54,10 @@ def list_repositories(
     offset: int = Query(None, ge=0, description="Number of results to skip"),
     session: Session = Depends(get_session)
 ):
-    statement = select(Repository)
+    statement = select(
+        Repository,
+        func.coalesce(func.array_length(Repository.contributors, 1), 0).label('contributors_count')
+    )
     sort_map = {
         "stargazers_count": Repository.stargazers_count,
         "forks": Repository.forks,
@@ -97,33 +100,27 @@ def list_repositories(
     if offset:
         statement = statement.offset(offset)
     res = session.exec(statement)
-    repos = res.all()
-    result = []
-    for repo in repos:
-        contributors_list = []
-        if repo.contributors:
-            try:
-                contributors_list = ast.literal_eval(repo.contributors)
-            except Exception:
-                contributors_list = []
+    results = res.all()
+    response = []
+    for repo, contributors_count in results:
         repo_dict = repo.dict()
-        repo_dict['contributors'] = len(contributors_list)
-        result.append(RepositoryResponse(**repo_dict))
-    return result
+        repo_dict['contributors'] = contributors_count
+        response.append(RepositoryResponse(**repo_dict))
+    return response
 
 @app.get("/repositories/{id}", response_model=RepositoryResponse)
 def get_repository(id: int, session: Session = Depends(get_session)):
-    repo = session.get(Repository, id)
-    if not repo:
-        from fastapi import HTTPException
+    from sqlalchemy import func
+    statement = select(
+        Repository,
+        func.coalesce(func.array_length(Repository.contributors, 1), 0).label('contributors_count')
+    ).where(Repository.id == id)
+    res = session.exec(statement)
+    row = res.first()
+    if not row:
         raise HTTPException(status_code=404, detail="Repository not found")
-    contributors_list = []
-    if repo.contributors:
-        try:
-            contributors_list = ast.literal_eval(repo.contributors)
-        except Exception:
-            contributors_list = []
+    repo, contributors_count = row
     repo_dict = repo.dict()
-    repo_dict['contributors'] = len(contributors_list)
+    repo_dict['contributors'] = contributors_count
     return RepositoryResponse(**repo_dict)
 
