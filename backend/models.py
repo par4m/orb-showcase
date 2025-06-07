@@ -54,6 +54,6 @@ class RepositoryResponse(BaseModel):
     subscribers_count: float | None
     created_at: str | None
     watchers_count: int | None = None
-    contributors: list[str] | None = None
+    contributors: int | None = None
     updated_at: str | None
     homepage: str | None

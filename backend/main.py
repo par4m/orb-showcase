@@ -98,14 +98,18 @@ def list_repositories(
         statement = statement.offset(offset)
     res = session.exec(statement)
     repos = res.all()
-    # Parse contributors from string to list for each repo
+    result = []
     for repo in repos:
-        if hasattr(repo, 'contributors') and isinstance(repo.contributors, str):
+        contributors_list = []
+        if repo.contributors:
             try:
-                repo.contributors = ast.literal_eval(repo.contributors)
+                contributors_list = ast.literal_eval(repo.contributors)
             except Exception:
-                repo.contributors = []
-    return repos
+                contributors_list = []
+        repo_dict = repo.dict()
+        repo_dict['contributors'] = len(contributors_list)
+        result.append(RepositoryResponse(**repo_dict))
+    return result
 
 @app.get("/repositories/{id}", response_model=RepositoryResponse)
 def get_repository(id: int, session: Session = Depends(get_session)):
@@ -113,11 +117,13 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     if not repo:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Repository not found")
-    # Parse contributors from string to list
-    if hasattr(repo, 'contributors') and isinstance(repo.contributors, str):
+    contributors_list = []
+    if repo.contributors:
         try:
-            repo.contributors = ast.literal_eval(repo.contributors)
+            contributors_list = ast.literal_eval(repo.contributors)
         except Exception:
-            repo.contributors = []
-    return repo
+            contributors_list = []
+    repo_dict = repo.dict()
+    repo_dict['contributors'] = len(contributors_list)
+    return RepositoryResponse(**repo_dict)
 
