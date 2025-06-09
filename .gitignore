@@ -1,0 +1,41 @@
+
+# OS and Editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node (if you have frontend/Next.js)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+out/
+dist/
+coverage/
+
+# Python virtualenvs (if any created in root)
+venv/
+.venv/
+
+# Docker
+**/postgres_data/
+**/db_data/
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# Pytest cache
+.pytest_cache/
+
+# Misc
+*.bak
+*.tmp
