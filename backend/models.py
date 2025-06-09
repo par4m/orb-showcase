@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from sqlmodel import SQLModel, Field
-
+from sqlmodel import SQLModel, Field, Column, ARRAY, String
+from typing import List
 
 class Repository(SQLModel, table=True):
     __tablename__ = "combined_repositories_showcase"
@@ -17,7 +17,7 @@ class Repository(SQLModel, table=True):
     forks_count: int | None
     subscribers_count: float | None
     created_at: str | None
-    contributors: str | None 
+    contributors: str | None = Field(default=None, sa_column=Column(ARRAY(String)))
     homepage: str | None
 
 
@@ -35,6 +35,5 @@ class RepositoryResponse(BaseModel):
     forks_count: int | None
     subscribers_count: float | None
     created_at: str | None
-    watchers_count: int | None = None
     contributors: int | None = None
     homepage: str | None
