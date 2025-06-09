@@ -17,7 +17,6 @@ class Repository(SQLModel, table=True):
     forks_count: int | None
     subscribers_count: float | None
     created_at: str | None
-    watchers_count: int | None = None
     contributors: str | None 
     homepage: str | None
 
