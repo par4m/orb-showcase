@@ -2,12 +2,12 @@ from typing import List
 from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
-import ast
 from sqlalchemy import func
 from database import get_session
 from models import Repository, RepositoryResponse
 from fastapi import HTTPException
 
+ 
 app = FastAPI()
 
 
@@ -22,16 +22,37 @@ app.add_middleware(
 
 @app.get("/languages", response_model=List[str])
 def get_languages(session: Session = Depends(get_session)):
+    """
+    ### Get Languages
+    Returns a sorted list of unique programming languages found in the repositories.
+    
+    **Returns:**
+        - `List[str]`: List of unique languages.
+    """
     result = session.exec(select(Repository.language).where(Repository.language.isnot(None)).distinct())
     return sorted([lang for lang in result if lang])
 
 @app.get("/licenses", response_model=List[str])
 def get_licenses(session: Session = Depends(get_session)):
+    """
+    ### Get Licenses
+    Returns a sorted list of unique licenses from the repositories.
+    
+    **Returns:**
+        - `List[str]`: List of unique licenses.
+    """
     result = session.exec(select(Repository.license).where(Repository.license.isnot(None)).distinct())
     return sorted([lic for lic in result if lic])
 
 @app.get("/universities", response_model=List[str])
 def get_universities(session: Session = Depends(get_session)):
+    """
+    ### Get Universities
+    Returns a sorted list of unique universities from the repositories.
+    
+    **Returns:**
+        - `List[str]`: List of unique universities.
+    """
     result = session.exec(select(Repository.university).where(Repository.university.isnot(None)).distinct())
     return sorted([uni for uni in result if uni])
 
@@ -41,29 +62,43 @@ def list_repositories(
     university: List[str] = Query(None, description="University filter"),
     language: List[str] = Query(None, description="Language filter"),
     license: List[str] = Query(None, description="License filter"),
+    owner: List[str] = Query(None, description="Organization/Owner filter"),
     archived: int = Query(None, description="Archived filter (1 or 0)"),
-    has_issues: int = Query(None, description="Has issues filter (1 or 0)"),
-    has_projects: int = Query(None, description="Has projects filter (1 or 0)"),
-    has_downloads: int = Query(None, description="Has downloads filter (1 or 0)"),
-    has_wiki: int = Query(None, description="Has wiki filter (1 or 0)"),
-    has_pages: int = Query(None, description="Has pages filter (1 or 0)"),
-    has_discussions: int = Query(None, description="Has discussions filter (1 or 0)"),
-    sort: str = Query("stargazers_count", description="Sort by field: stargazers_count, forks, created_at, updated_at, open_issues_count"),
+    sort: str = Query("stargazers_count", description="Sort by field: stargazers_count, forks_count, created_at"),
     order: str = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(None, ge=1, le=100, description="Number of results to return"),
     offset: int = Query(None, ge=0, description="Number of results to skip"),
     session: Session = Depends(get_session)
 ):
+    """
+    ### List Repositories
+    Retrieves a list of repositories with optional filters and sorting.
+
+    **Parameters:**
+
+    - `q` (str, optional): Search term for repository name or description.
+    - `university` (List[str], optional): Filter by university.
+    - `language` (List[str], optional): Filter by programming language.
+    - `license` (List[str], optional): Filter by license.
+    - `owner` (List[str], optional): Filter by organization/owner.
+    - `archived` (int, optional): Filter by archived status (1 or 0).
+    - `sort` (str, default="stargazers_count"): Field to sort by.
+    - `order` (str, default="desc"): Sort order ('asc' or 'desc').
+    - `limit` (int, optional): Number of results to return (1-100).
+    - `offset` (int, optional): Number of results to skip.
+
+    **Returns:**
+
+    - `List[RepositoryResponse]`: List of repositories matching the filters.
+    """
     statement = select(
         Repository,
         func.coalesce(func.array_length(Repository.contributors, 1), 0).label('contributors_count')
     )
     sort_map = {
         "stargazers_count": Repository.stargazers_count,
-        "forks": Repository.forks,
+        "forks_count": Repository.forks_count,
         "created_at": Repository.created_at,
-        "updated_at": Repository.updated_at,
-        "open_issues_count": Repository.open_issues_count,
     }
     sort_field = sort_map.get(sort, Repository.stargazers_count)
     if order == "asc":
@@ -81,20 +116,10 @@ def list_repositories(
         statement = statement.where(Repository.language.in_(language))
     if license:
         statement = statement.where(Repository.license.in_(license))
+    if owner:
+        statement = statement.where(Repository.owner.in_(owner))
     if archived is not None:
         statement = statement.where(Repository.archived == archived)
-    if has_issues is not None:
-        statement = statement.where(Repository.has_issues == has_issues)
-    if has_projects is not None:
-        statement = statement.where(Repository.has_projects == has_projects)
-    if has_downloads is not None:
-        statement = statement.where(Repository.has_downloads == has_downloads)
-    if has_wiki is not None:
-        statement = statement.where(Repository.has_wiki == has_wiki)
-    if has_pages is not None:
-        statement = statement.where(Repository.has_pages == has_pages)
-    if has_discussions is not None:
-        statement = statement.where(Repository.has_discussions == has_discussions)
     if limit:
         statement = statement.limit(limit)
     if offset:
@@ -110,7 +135,19 @@ def list_repositories(
 
 @app.get("/repositories/{id}", response_model=RepositoryResponse)
 def get_repository(id: int, session: Session = Depends(get_session)):
-    from sqlalchemy import func
+    """
+    ### Get Repository by ID
+    Retrieves a repository by its unique ID, including contributor count.
+    
+    **Parameters:**
+        - `id` (int): The unique identifier of the repository.
+    
+    **Returns:**
+        - `RepositoryResponse`: Repository details if found.
+    
+    **Raises:**
+        - `HTTPException 404`: If the repository is not found.
+    """
     statement = select(
         Repository,
         func.coalesce(func.array_length(Repository.contributors, 1), 0).label('contributors_count')
@@ -124,3 +161,20 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     repo_dict['contributors'] = contributors_count
     return RepositoryResponse(**repo_dict)
 
+
+@app.get("/organizations", response_model=List[str])
+def get_organizations(session: Session = Depends(get_session)):
+    """
+    ### Get Organizations
+    Returns a sorted list of unique organization/owner names where the repository is marked as an organization.
+    
+    **Returns:**
+        - `List[str]`: List of unique organization/owner names.
+    """
+    result = session.exec(
+        select(Repository.owner)
+        .where(Repository.owner.isnot(None))
+        .where(Repository.organization == '1')
+        .distinct()
+    )
+    return sorted([owner for owner in result if owner])
