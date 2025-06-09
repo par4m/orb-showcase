@@ -15,7 +15,6 @@ class Repository(SQLModel, table=True):
     stargazers_count: int | None
     html_url: str | None
     forks_count: int | None
-    archived: int | None
     subscribers_count: float | None
     created_at: str | None
     watchers_count: int | None = None
@@ -35,7 +34,6 @@ class RepositoryResponse(BaseModel):
     stargazers_count: int | None
     html_url: str | None
     forks_count: int | None
-    archived: int | None
     subscribers_count: float | None
     created_at: str | None
     watchers_count: int | None = None

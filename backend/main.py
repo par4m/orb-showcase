@@ -63,7 +63,6 @@ def list_repositories(
     language: List[str] = Query(None, description="Language filter"),
     license: List[str] = Query(None, description="License filter"),
     owner: List[str] = Query(None, description="Organization/Owner filter"),
-    archived: int = Query(None, description="Archived filter (1 or 0)"),
     sort: str = Query("stargazers_count", description="Sort by field: stargazers_count, forks_count, created_at"),
     order: str = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(None, ge=1, le=100, description="Number of results to return"),
@@ -81,7 +80,6 @@ def list_repositories(
     - `language` (List[str], optional): Filter by programming language.
     - `license` (List[str], optional): Filter by license.
     - `owner` (List[str], optional): Filter by organization/owner.
-    - `archived` (int, optional): Filter by archived status (1 or 0).
     - `sort` (str, default="stargazers_count"): Field to sort by.
     - `order` (str, default="desc"): Sort order ('asc' or 'desc').
     - `limit` (int, optional): Number of results to return (1-100).
@@ -118,8 +116,7 @@ def list_repositories(
         statement = statement.where(Repository.license.in_(license))
     if owner:
         statement = statement.where(Repository.owner.in_(owner))
-    if archived is not None:
-        statement = statement.where(Repository.archived == archived)
+   
     if limit:
         statement = statement.limit(limit)
     if offset:
