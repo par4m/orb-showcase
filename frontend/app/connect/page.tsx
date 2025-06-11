@@ -9,29 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export default function ConnectPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b">
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/images/uc-ospo-logo.svg" alt="UC OSPO Network" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-sky-700">UC ORB</span>
-          </Link>
-          <nav className="flex gap-6">
-            <Link href="/" className="font-medium">
-              Home
-            </Link>
-            <Link href="/repositories" className="font-medium">
-              Repositories
-            </Link>
-            <Link href="/about" className="font-medium">
-              About
-            </Link>
-            <Link href="/connect" className="font-medium font-bold text-sky-700">
-              Connect
-            </Link>
-          </nav>
-        </div>
-      </header>
-
       <main className="flex-1 py-10">
         <div className="container max-w-5xl">
           <h1 className="text-3xl font-bold mb-8 text-sky-800">Connect With Us</h1>

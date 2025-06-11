@@ -2,6 +2,7 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { RepositoryPage } from "../../../components/RepositoryPage";
+import { RepositoryPageSkeleton } from "../../../components/RepositoryPageSkeleton";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -19,7 +20,7 @@ export default function RepositoryDetailPage() {
     enabled: !!id,
   });
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <RepositoryPageSkeleton />;
   if (error || !repo) return <div>Not found</div>;
 
   return <RepositoryPage repo={repo} />;

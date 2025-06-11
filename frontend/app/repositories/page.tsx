@@ -21,6 +21,8 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { Select as PageSizeSelect, SelectTrigger as PageSizeSelectTrigger, SelectContent as PageSizeSelectContent, SelectItem as PageSizeSelectItem, SelectValue as PageSizeSelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton"
+import { RepositoryCardSkeleton } from "@/components/RepositoryCardSkeleton"
 
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -53,7 +55,7 @@ export default function RepositoriesPage() {
   })
 
   // Fetch repositories
-  const { data: repositories, isLoading, error, refetch } = useQuery({
+  const { data: repositories, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["repositories", university, language, license, owner],
     queryFn: async () => {
       const params = new URLSearchParams()
@@ -136,29 +138,7 @@ export default function RepositoriesPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b">
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/images/uc-ospo-logo.svg" alt="UC OSPO Network" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-sky-700">UC ORB</span>
-          </Link>
-          <nav className="flex gap-6">
-            <Link href="/" className="font-medium">
-              Home
-            </Link>
-            <Link href="/repositories" className="font-medium font-bold text-sky-700">
-              Repositories
-            </Link>
-            <Link href="/about" className="font-medium">
-              About
-            </Link>
-            <Link href="/connect" className="font-medium">
-              Connect
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+      
       <main className="flex-1 py-10">
         <div className="container">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
@@ -258,8 +238,10 @@ export default function RepositoriesPage() {
 
             <div className="space-y-6">
               {isLoading ? (
-                <div className="text-center py-12">
-                  <p>Loading repositories...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <RepositoryCardSkeleton key={i} />
+                  ))}
                 </div>
               ) : error ? (
                 <div className="bg-red-50 p-4 rounded-md">
@@ -267,6 +249,16 @@ export default function RepositoriesPage() {
                 </div>
               ) : filteredRepositories.length > 0 ? (
                 <>
+                  {/* Show a subtle spinner overlay when isFetching but not isLoading */}
+                  {isFetching && !isLoading && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="animate-spin h-5 w-5 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                      </svg>
+                      <span className="text-xs text-sky-600">Refreshing…</span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {paginatedRepos.map((repo: any) => (
                       <RepositoryCard key={repo.id} repo={repo} />

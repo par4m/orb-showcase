@@ -31,29 +31,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b">
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/images/uc-ospo-logo.svg" alt="UC OSPO Network" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-sky-700">UC ORB</span>
-          </Link>
-          <nav className="flex gap-6">
-            <Link href="/" className="font-medium">
-              Home
-            </Link>
-            <Link href="/repositories" className="font-medium">
-              Repositories
-            </Link>
-            <Link href="/about" className="font-medium">
-              About
-            </Link>
-            <Link href="/connect" className="font-medium">
-              Connect
-            </Link>
-          </nav>
-        </div>
-      </header>
-
       <main className="flex-1">
         <section className="bg-sky-700 text-white py-20">
           <div className="container text-center space-y-6">

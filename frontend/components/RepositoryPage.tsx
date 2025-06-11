@@ -30,28 +30,9 @@ interface Props {
 export const RepositoryPage: React.FC<Props> = ({ repo }) => {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b">
-        <div className="container flex h-16 items-center justify-between">
-          <a href="/" className="flex items-center gap-2">
-            <img src="/images/uc-ospo-logo.svg" alt="UC OSPO Network" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-sky-700">UC ORB</span>
-          </a>
-          <nav className="flex gap-6">
-            <a href="/" className="font-medium">Home</a>
-            <a href="/repositories" className="font-medium">Repositories</a>
-            <a href="/about" className="font-medium">About</a>
-            <a href="/connect" className="font-medium">Connect</a>
-          </nav>
-        </div>
-      </header>
       <main className="flex-1 py-10">
         <div className="container max-w-6xl">
-          <div className="mb-6">
-            <Link href="/repositories" className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 mb-4">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Repositories
-            </Link>
-          </div>
+          
           <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
             <div className="space-y-6">
               <div>
@@ -148,33 +129,6 @@ export const RepositoryPage: React.FC<Props> = ({ repo }) => {
           </div>
         </div>
       </main>
-      <footer className="bg-sky-800 text-white py-8">
-        <div className="container flex justify-center items-center gap-4">
-          <p>© {new Date().getFullYear()} UC OSPO Network. All rights reserved.</p>
-          <a
-            href="https://github.com/UC-OSPO-Network"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white hover:text-sky-200 transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-github"
-            >
-              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-              <path d="M9 18c-4.51 2-5-2-7-2" />
-            </svg>
-          </a>
-        </div>
-      </footer>
     </div>
   );
 };
