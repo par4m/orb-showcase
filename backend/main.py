@@ -106,7 +106,7 @@ def list_repositories(
     if q:
         search = f"%{q.lower()}%"
         statement = statement.where(
-            (Repository.name.ilike(search)) | (Repository.description.ilike(search))
+            (Repository.full_name.ilike(search)) | (Repository.description.ilike(search))
         )
     if university:
         statement = statement.where(Repository.university.in_(university))
