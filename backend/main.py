@@ -91,7 +91,7 @@ def list_repositories(
     """
     statement = select(
         Repository,
-        func.coalesce(func.array_length(Repository.contributors, 1), 0).label('contributors_count')
+        func.coalesce(func.jsonb_array_length(Repository.contributors), 0).label('contributors_count')
     )
     sort_map = {
         "stargazers_count": Repository.stargazers_count,
@@ -127,6 +127,10 @@ def list_repositories(
     for repo, contributors_count in results:
         repo_dict = repo.dict()
         repo_dict['contributors'] = contributors_count
+        # Convert datetime fields to ISO string for Pydantic
+        for dt_field in ["created_at", "updated_at", "pushed_at"]:
+            if dt_field in repo_dict and hasattr(repo_dict[dt_field], "isoformat"):
+                repo_dict[dt_field] = repo_dict[dt_field].isoformat()
         response.append(RepositoryResponse(**repo_dict))
     return response
 
@@ -147,7 +151,7 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     """
     statement = select(
         Repository,
-        func.coalesce(func.array_length(Repository.contributors, 1), 0).label('contributors_count')
+        func.coalesce(func.jsonb_array_length(Repository.contributors), 0).label('contributors_count')
     ).where(Repository.id == id)
     res = session.exec(statement)
     row = res.first()
@@ -156,6 +160,10 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     repo, contributors_count = row
     repo_dict = repo.dict()
     repo_dict['contributors'] = contributors_count
+    # Convert datetime fields to ISO string for Pydantic
+    for dt_field in ["created_at", "updated_at", "pushed_at"]:
+        if dt_field in repo_dict and hasattr(repo_dict[dt_field], "isoformat"):
+            repo_dict[dt_field] = repo_dict[dt_field].isoformat()
     return RepositoryResponse(**repo_dict)
 
 
