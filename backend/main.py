@@ -9,7 +9,7 @@ from database import get_session
 app = FastAPI()
 
 
-origins = ["http://localhost", "http://localhost:3000"]
+origins = ["http://localhost", "http://localhost:3000", "https://orb-showcase.vercel.app"]
 
 app.add_middleware(
     CORSMiddleware,
