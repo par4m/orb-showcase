@@ -3,27 +3,22 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { RepositoryFilters } from "@/components/RepositoryFilters/RepositoryFilters";
+import { RepositoryGrid } from "@/components/RepositoryGrid/RepositoryGrid";
+import { RepositoryPagination } from "@/components/RepositoryPagination/RepositoryPagination";
+import { RepositoryEmptyState } from "@/components/RepositoryEmptyState/RepositoryEmptyState";
+import { RepositoryErrorState } from "@/components/RepositoryErrorState/RepositoryErrorState";
+import { RepositoryLoadingGrid } from "@/components/RepositoryLoadingGrid/RepositoryLoadingGrid";
+import { Select as PageSizeSelect, SelectTrigger as PageSizeSelectTrigger, SelectContent as PageSizeSelectContent, SelectItem as PageSizeSelectItem, SelectValue as PageSizeSelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton"
+import { RepositoryCardSkeleton } from "@/components/RepositoryCardSkeleton"
 import { useState, useEffect, useMemo } from "react"
 import fuzzysort from "fuzzysort"
 import { useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
-import { RepositoryCard } from "@/components/RepositoryCard";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
-import { Select as PageSizeSelect, SelectTrigger as PageSizeSelectTrigger, SelectContent as PageSizeSelectContent, SelectItem as PageSizeSelectItem, SelectValue as PageSizeSelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton"
-import { RepositoryCardSkeleton } from "@/components/RepositoryCardSkeleton"
-
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis, } from "@/components/ui/pagination";
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -161,95 +156,30 @@ export default function RepositoriesPage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-[250px_1fr]">
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-medium mb-2">Search</h3>
-                <Input
-                  placeholder="Search repositories..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-2">University</h3>
-                <Select value={university} onValueChange={setUniversity}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select university" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">All Universities</SelectItem>
-                    {universities && universities.map((uni: string) => (
-                      <SelectItem key={uni} value={uni}>{uni}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-2">Language</h3>
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">All Languages</SelectItem>
-                    {languages && languages.map((lang: string) => (
-                      <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-2">License</h3>
-                <Select value={license} onValueChange={setLicense}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select license" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">All Licenses</SelectItem>
-                    {licenses && licenses.map((lic: string) => (
-                      <SelectItem key={lic} value={lic}>{lic}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-2">Development Team</h3>
-                <Select value={owner} onValueChange={setOwner}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Development Team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">All Development Teams</SelectItem>
-                    {organizations && organizations.map((org: string) => (
-                      <SelectItem key={org} value={org}>{org}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button className="w-full" onClick={handleApplyFilters}>
-                Apply Filters
-              </Button>
-            </div>
-
+            <RepositoryFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              university={university}
+              setUniversity={setUniversity}
+              language={language}
+              setLanguage={setLanguage}
+              license={license}
+              setLicense={setLicense}
+              owner={owner}
+              setOwner={setOwner}
+              universities={universities || []}
+              languages={languages || []}
+              licenses={licenses || []}
+              organizations={organizations || []}
+              onApplyFilters={handleApplyFilters}
+            />
             <div className="space-y-6">
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <RepositoryCardSkeleton key={i} />
-                  ))}
-                </div>
+                <RepositoryLoadingGrid />
               ) : error ? (
-                <div className="bg-red-50 p-4 rounded-md">
-                  <p className="text-red-800">{typeof error === "string" ? error : error?.message ?? String(error)}</p>
-                </div>
+                <RepositoryErrorState error={error} />
               ) : filteredRepositories.length > 0 ? (
                 <>
-                  {/* Show a subtle spinner overlay when isFetching but not isLoading */}
                   {isFetching && !isLoading && (
                     <div className="flex items-center gap-2 mb-2">
                       <svg className="animate-spin h-5 w-5 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -259,58 +189,15 @@ export default function RepositoriesPage() {
                       <span className="text-xs text-sky-600">Refreshing…</span>
                     </div>
                   )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {paginatedRepos.map((repo: any) => (
-                      <RepositoryCard key={repo.id} repo={repo} />
-                    ))}
-                  </div>
-                  {/* Pagination controls */}
-                  <div className="flex flex-col items-center gap-2 mt-8">
-                    <span className="text-xs text-gray-500">Page {page} of {totalPages}</span>
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            href="#"
-                            aria-disabled={page === 1}
-                            tabIndex={page === 1 ? -1 : 0}
-                            onClick={e => { e.preventDefault(); if (page > 1) setPage(page - 1); }}
-                          />
-                        </PaginationItem>
-                        {getPageNumbers(page, totalPages).map((p, idx) =>
-                          p === 'ellipsis-prev' || p === 'ellipsis-next' ? (
-                            <PaginationItem key={p + idx}>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          ) : (
-                            <PaginationItem key={p}>
-                              <PaginationLink
-                                href="#"
-                                isActive={p === page}
-                                aria-current={p === page ? 'page' : undefined}
-                                onClick={e => { e.preventDefault(); setPage(Number(p)); }}
-                              >
-                                {p}
-                              </PaginationLink>
-                            </PaginationItem>
-                          )
-                        )}
-                        <PaginationItem>
-                          <PaginationNext
-                            href="#"
-                            aria-disabled={page === totalPages}
-                            tabIndex={page === totalPages ? -1 : 0}
-                            onClick={e => { e.preventDefault(); if (page < totalPages) setPage(page + 1); }}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
+                  <RepositoryGrid repositories={paginatedRepos} />
+                  <RepositoryPagination
+                    page={page}
+                    totalPages={totalPages}
+                    setPage={setPage}
+                  />
                 </>
               ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <p className="text-gray-600">No repositories found. Try adjusting your filters.</p>
-                </div>
+                <RepositoryEmptyState />
               )}
             </div>
           </div>

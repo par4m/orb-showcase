@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getUniversityDisplayName } from "@/lib/universities";
 import { Star, Eye, GitFork } from "lucide-react";
 
 export function RepositoryCard({ repo }: { repo: any }) {
@@ -24,7 +25,7 @@ export function RepositoryCard({ repo }: { repo: any }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`text-xs px-2 py-1 rounded ${colors[repo.language] || 'bg-gray-100 text-gray-800'}`}>{repo.language}</span>
             {repo.university && (
-              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded ml-2">{repo.university}</span>
+              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded ml-2">{getUniversityDisplayName(repo.university)}</span>
             )}
             {repo.license && (
               <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-800 border border-gray-200 ml-2">

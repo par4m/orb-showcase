@@ -48,10 +48,9 @@ const PaginationLink = ({
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
-      buttonVariants({
-        variant: isActive ? "outline" : "ghost",
-        size,
-      }),
+      isActive
+        ? "border-2 border-input rounded-md px-3 py-2 font-bold transition-all duration-150 focus:outline-none"
+        : buttonVariants({ variant: "ghost", size }) + " border-none focus:outline-none",
       className
     )}
     {...props}

@@ -1,4 +1,5 @@
 import React from "react";
+import { getUniversityDisplayName } from "@/lib/universities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo }) => {
                 <div className="flex flex-wrap gap-2 mb-6">
                   {repo.language && <Badge variant="outline" className="text-sm">{repo.language}</Badge>}
                   {repo.license && <Badge variant="secondary" className="text-sm">{repo.license}</Badge>}
-                  {repo.university && <Badge variant="secondary" className="text-sm">{repo.university}</Badge>}
+                  {repo.university && <Badge variant="secondary" className="text-sm">{getUniversityDisplayName(repo.university)}</Badge>}
                 </div>
                 <div className="flex gap-4 mb-8">
                   <div className="flex items-center gap-1 text-gray-600">

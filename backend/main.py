@@ -1,12 +1,10 @@
 from typing import List
 from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session, select
-from sqlalchemy import func
-from database import get_session
+from sqlmodel import Session, select, func
 from models import Repository, RepositoryResponse
 from fastapi import HTTPException
-
+from database import get_session
  
 app = FastAPI()
 
@@ -152,7 +150,7 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     statement = select(
         Repository,
         func.coalesce(func.jsonb_array_length(Repository.contributors), 0).label('contributors_count')
-    ).where(Repository.id == id)
+    ).where(Repository.id == id)  # uses func from sqlmodel
     res = session.exec(statement)
     row = res.first()
     if not row:
