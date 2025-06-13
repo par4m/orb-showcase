@@ -1,5 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
+import { useRepositories } from "@/context/RepositoriesContext";
 import { useQuery } from "@tanstack/react-query";
 import { RepositoryPage } from "../../../components/RepositoryPage";
 import { RepositoryPageSkeleton } from "../../../components/RepositoryPageSkeleton";
@@ -27,9 +28,15 @@ type Repository = {
 export default function RepositoryDetailPage() {
   const params = useParams();
   const id = params?.id as string;
+  const { repositories } = useRepositories();
+  const repo = repositories.find(r => String(r.id) === id);
 
+  // Fallback: If not found in context, fetch from API (for hard reload/bookmark)
+  // You can optionally skip this if you want purely client-side only
+  // For now, fallback to API fetch if not found
+  const shouldFetch = !repo && !!id;
   const {
-    data: repo,
+    data: fetchedRepo,
     isLoading,
     error,
     isFetched,
@@ -39,7 +46,6 @@ export default function RepositoryDetailPage() {
     queryFn: async () => {
       const res = await fetch(`${API_URL}/repositories/${id}`);
       if (res.status === 404) {
-        // Parse the error body for detail if present
         let message = "Repository not found";
         try {
           const data = await res.json();
@@ -52,13 +58,17 @@ export default function RepositoryDetailPage() {
       if (!res.ok) throw new Error("Failed to fetch repository");
       return res.json();
     },
-    enabled: !!id,
+    enabled: shouldFetch,
     retry: false,
   });
 
-  const is404 = isError && error && (
-    (typeof error === "object" && error !== null && "code" in error && (error as any).code === 404) ||
-    error.message === "Repository not found"
+  const displayRepo = repo || fetchedRepo;
+  const is404 = (
+    shouldFetch &&
+    isError &&
+    error &&
+    ((typeof error === "object" && error !== null && "code" in error && (error as any).code === 404) ||
+      error.message === "Repository not found")
   );
 
   // Show not found UI immediately after fetch if 404
@@ -92,13 +102,22 @@ export default function RepositoryDetailPage() {
     </>
   );
 
+  if (!displayRepo && (isLoading || shouldFetch)) return <RepositoryPageSkeleton />;
+  if (!displayRepo && is404) return (
+    <RepositoryErrorState error={error || "Not found"}>
+      <div className="flex flex-col items-center gap-2 mt-4">
+        <Link href="/repositories" className="text-sky-700 underline">Back to Repositories</Link>
+      </div>
+    </RepositoryErrorState>
+  );
+  if (!displayRepo) return null;
   return (
     <>
       <Head>
-        <title>{repo.full_name} | ORB Showcase</title>
-        <meta name="description" content={repo.description || "Repository details"} />
+        <title>{displayRepo.full_name} | ORB Showcase</title>
+        <meta name="description" content={displayRepo.description || "Repository details"} />
       </Head>
-      <RepositoryPage repo={repo} />
+      <RepositoryPage repo={displayRepo} />
     </>
   );
 }

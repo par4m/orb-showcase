@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRepositories } from "@/context/RepositoriesContext";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { RepositoryFilters } from "@/components/RepositoryFilters/RepositoryFilters";
@@ -13,6 +14,7 @@ import fuzzysort from "fuzzysort";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export function RepositoriesPageClient() {
+  const { repositories, setRepositories } = useRepositories();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [university, setUniversity] = useState("__all__");
@@ -38,11 +40,28 @@ export function RepositoriesPageClient() {
     queryFn: () => fetch(`${API_URL}/organizations`).then(res => res.json()),
   });
 
-    // Fetch repositories (example, adapt as needed)
-  const { data: repositories, isLoading, isError, refetch } = useQuery({
-    queryKey: ["repositories", { searchTerm, university, language, license, owner }],
-    queryFn: () => fetch(`${API_URL}/repositories?...`).then(res => res.json()),
-  });
+    // Fetch all repositories once on mount
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    async function fetchRepos() {
+      setIsLoading(true);
+      setIsError(false);
+      try {
+        const res = await fetch(`${API_URL}/repositories`);
+        const data = await res.json();
+        if (!ignore) setRepositories(data);
+      } catch (e) {
+        if (!ignore) setIsError(true);
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    }
+    if (repositories.length === 0) fetchRepos();
+    return () => { ignore = true; };
+  }, [setRepositories, repositories.length]);
 
   // Sync search param to state
   React.useEffect(() => {
@@ -50,17 +69,24 @@ export function RepositoriesPageClient() {
     if (urlSearch) setSearchTerm(urlSearch);
   }, [searchParams]);
 
-  // Client-side search filter
+  // Client-side filtering (all filters and search)
   const filteredRepositories = React.useMemo(() => {
     if (!repositories) return [];
-    if (!searchTerm.trim()) return repositories;
-    const results = fuzzysort.go(
-      searchTerm,
-      repositories,
-      { keys: ["full_name", "description"], threshold: -10000, limit: 50 }
-    );
-    return results.map((r: any) => r.obj);
-  }, [repositories, searchTerm]);
+    let result = repositories;
+    if (university !== "__all__") result = result.filter(r => r.university === university);
+    if (language !== "__all__") result = result.filter(r => r.language === language);
+    if (license !== "__all__") result = result.filter(r => r.license === license);
+    if (owner !== "__all__") result = result.filter(r => r.owner === owner);
+    if (searchTerm.trim()) {
+      const fuzzy = fuzzysort.go(
+        searchTerm,
+        result,
+        { keys: ["full_name", "description"], threshold: -10000, limit: 50 }
+      );
+      result = fuzzy.map(r => r.obj);
+    }
+    return result;
+  }, [repositories, university, language, license, owner, searchTerm]);
 
   // Pagination state
   const [page, setPage] = React.useState(1);
@@ -73,7 +99,7 @@ export function RepositoriesPageClient() {
     [filteredRepositories, page, pageSize]
   );
 
-  const handleApplyFilters = () => { refetch(); };
+  const handleApplyFilters = () => {}; // No-op, all filtering is client-side
 
   return (
     <div className="flex flex-col min-h-screen">
