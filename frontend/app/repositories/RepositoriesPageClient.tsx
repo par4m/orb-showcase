@@ -105,7 +105,7 @@ export function RepositoriesPageClient() {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-10">
-        <div className="container">
+        <div className="w-full px-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
             <h1 className="text-3xl font-bold text-sky-800">Browse Repositories</h1>
             <div className="flex items-center gap-2 ml-auto">
@@ -123,7 +123,7 @@ export function RepositoriesPageClient() {
               <span className="ml-4 text-gray-500 text-xs">{totalItems} repositories</span>
             </div>
           </div>
-          <div className="grid gap-6 md:grid-cols-[250px_1fr]">
+          <div className="grid gap-6 md:grid-cols-[250px_1fr] w-full">
             <div>
               <RepositoryFilters
                 searchTerm={searchTerm}

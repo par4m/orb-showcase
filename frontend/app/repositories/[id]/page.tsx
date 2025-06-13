@@ -25,7 +25,7 @@ type Repository = {
   // add other fields as needed
 };
 
-import { RepositoriesProvider } from "@/context/RepositoriesContext";
+
 
 export default function RepositoryDetailPage() {
   const params = useParams();
