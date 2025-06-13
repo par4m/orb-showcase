@@ -105,7 +105,7 @@ export function RepositoriesPageClient() {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-10">
-        <div className="w-full px-4">
+        <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
             <h1 className="text-3xl font-bold text-sky-800">Browse Repositories</h1>
             <div className="flex items-center gap-2 ml-auto">
