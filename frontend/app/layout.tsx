@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import Providers from "./Providers"
 import Navbar from "@/components/Navbar"
+import { RepositoriesProvider } from "@/context/RepositoriesContext";
 
 const inter = Inter({ subsets: ["latin"] })
 

@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useRepositories } from "@/context/RepositoriesContext";
+import { useRepositoriesStore } from "@/store/repositories";
 import { useQuery } from "@tanstack/react-query";
 import { RepositoryPage } from "../../../components/RepositoryPage";
 import { RepositoryPageSkeleton } from "../../../components/RepositoryPageSkeleton";
@@ -25,10 +25,12 @@ type Repository = {
   // add other fields as needed
 };
 
+import { RepositoriesProvider } from "@/context/RepositoriesContext";
+
 export default function RepositoryDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const { repositories } = useRepositories();
+  const repositories = useRepositoriesStore((state) => state.repositories);
   const repo = repositories.find(r => String(r.id) === id);
 
   // Fallback: If not found in context, fetch from API (for hard reload/bookmark)

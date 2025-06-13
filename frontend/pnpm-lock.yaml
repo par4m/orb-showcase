@@ -164,6 +164,9 @@ importers:
       zod:
         specifier: ^3.24.1
         version: 3.25.61
+      zustand:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/react@19.1.7)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
     devDependencies:
       '@types/node':
         specifier: ^22
@@ -2989,6 +2992,24 @@ packages:
 
   zod@3.25.61:
     resolution: {integrity: sha512-fzfJgUw78LTNnHujj9re1Ov/JJQkRZZGDMcYqSx7Hp4rPOkKywaFHq0S6GoHeXs0wGNE/sIOutkXgnwzrVOGCQ==}
+
+  zustand@5.0.5:
+    resolution: {integrity: sha512-mILtRfKW9xM47hqxGIxCv12gXusoY/xTSHBYApXozR0HmQv299whhBeeAcRy+KrPPybzosvJBCOmVjq6x12fCg==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
 
 snapshots:
 
@@ -6078,3 +6099,9 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   zod@3.25.61: {}
+
+  zustand@5.0.5(@types/react@19.1.7)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0)):
+    optionalDependencies:
+      '@types/react': 19.1.7
+      react: 19.1.0
+      use-sync-external-store: 1.5.0(react@19.1.0)

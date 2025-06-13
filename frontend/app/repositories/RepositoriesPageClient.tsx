@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRepositories } from "@/context/RepositoriesContext";
+import { useRepositoriesStore } from "@/store/repositories";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { RepositoryFilters } from "@/components/RepositoryFilters/RepositoryFilters";
@@ -14,7 +14,8 @@ import fuzzysort from "fuzzysort";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export function RepositoriesPageClient() {
-  const { repositories, setRepositories } = useRepositories();
+  const repositories = useRepositoriesStore((state) => state.repositories);
+  const setRepositories = useRepositoriesStore((state) => state.setRepositories);
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [university, setUniversity] = useState("__all__");
