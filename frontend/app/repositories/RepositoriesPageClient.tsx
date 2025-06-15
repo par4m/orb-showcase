@@ -27,18 +27,26 @@ export function RepositoriesPageClient() {
   const { data: universities } = useQuery({
     queryKey: ["universities"],
     queryFn: () => fetch(`${API_URL}/universities`).then(res => res.json()),
+    cacheTime: 600_000, // 10 min
+    staleTime: 300_000, // 5 min
   });
   const { data: languages } = useQuery({
     queryKey: ["languages"],
     queryFn: () => fetch(`${API_URL}/languages`).then(res => res.json()),
+    cacheTime: 600_000,
+    staleTime: 300_000,
   });
   const { data: licenses } = useQuery({
     queryKey: ["licenses"],
     queryFn: () => fetch(`${API_URL}/licenses`).then(res => res.json()),
+    cacheTime: 600_000,
+    staleTime: 300_000,
   });
   const { data: organizations } = useQuery({
     queryKey: ["organizations"],
     queryFn: () => fetch(`${API_URL}/organizations`).then(res => res.json()),
+    cacheTime: 600_000,
+    staleTime: 300_000,
   });
 
     // Fetch all repositories once on mount

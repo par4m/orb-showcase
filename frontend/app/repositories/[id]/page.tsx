@@ -62,7 +62,13 @@ export default function RepositoryDetailPage() {
     },
     enabled: shouldFetch,
     retry: false,
+    // Optimizations for instant UI:
+    initialData: () => repositories.find(r => String(r.id) === id),
+    placeholderData: () => repositories.find(r => String(r.id) === id),
+    staleTime: 300_000, // 5 min
+    cacheTime: 600_000, // 10 min
   });
+  // For even faster navigation, prefetch this query on card hover using queryClient.prefetchQuery.
 
   const displayRepo = repo || fetchedRepo;
   const is404 = (
@@ -91,7 +97,8 @@ export default function RepositoryDetailPage() {
 
   // Only show skeleton during the initial fetch, not after a 404
   if (isLoading && !isFetched) return <RepositoryPageSkeleton />;
-  if (isError || !repo) return (
+  if (!displayRepo && (isLoading || shouldFetch)) return <RepositoryPageSkeleton />;
+  if (!displayRepo && isError) return (
     <>
       <Head>
         <title>Error | ORB Showcase</title>
@@ -102,15 +109,6 @@ export default function RepositoryDetailPage() {
         </div>
       </RepositoryErrorState>
     </>
-  );
-
-  if (!displayRepo && (isLoading || shouldFetch)) return <RepositoryPageSkeleton />;
-  if (!displayRepo && is404) return (
-    <RepositoryErrorState error={error || "Not found"}>
-      <div className="flex flex-col items-center gap-2 mt-4">
-        <Link href="/repositories" className="text-sky-700 underline">Back to Repositories</Link>
-      </div>
-    </RepositoryErrorState>
   );
   if (!displayRepo) return null;
   return (
