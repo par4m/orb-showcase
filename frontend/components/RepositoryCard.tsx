@@ -51,10 +51,10 @@ export function RepositoryCard({ repo }: { repo: any }) {
           {/* Tags */}
           <div className="flex flex-wrap gap-2 md:gap-3 mb-4">
             {repo.language && (
-              <span className={`bg-gradient-to-r ${colors[repo.language] || 'bg-gray-100 text-gray-800'} text-slate-800 border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 px-2 md:px-3 py-1 font-semibold rounded-full`}>{repo.language}</span>
+              <span className={`bg-gradient-to-r ${colors[repo.language] || 'bg-gray-100 text-gray-800'} text-slate-800 border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 px-2 md:px-3 py-1 font-medium rounded-full border text-center`}>{repo.language}</span>
             )}
             {repo.license && (
-              <span className="border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors duration-300 px-3 py-1.5 font-medium rounded-full border">
+              <span className="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-800 border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 px-2 md:px-3 py-1 font-medium rounded-full border text-center">
                 {repo.license}
               </span>
             )}
