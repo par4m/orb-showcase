@@ -10,7 +10,7 @@ export default function ConnectPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-10">
-        <div className="container max-w-5xl">
+        <div className="container">
           <h1 className="text-3xl font-bold mb-8 text-sky-800">Connect With Us</h1>
 
           <div className="grid gap-8 md:grid-cols-2">

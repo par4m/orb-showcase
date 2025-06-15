@@ -5,7 +5,7 @@ export default function AboutPage() {
     <div className="flex flex-col min-h-screen">
       
       <main className="flex-1 py-10">
-        <div className="container max-w-4xl">
+        <div className="container">
           <h1 className="text-3xl font-bold mb-8 text-sky-800">About Open Source Hub</h1>
 
           <div className="prose max-w-none">
