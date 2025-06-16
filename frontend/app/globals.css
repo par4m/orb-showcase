@@ -95,7 +95,28 @@
 }
 
 .container {
-  @apply w-full;
+  @apply w-full max-w-7xl mx-auto px-4;
+}
+
+@media (min-width: 1536px) { /* 2xl in Tailwind */
+  .container {
+    max-width: 1536px;
+  }
+}
+@media (min-width: 1920px) { /* 1080p+ */
+  .container {
+    max-width: 1800px;
+  }
+}
+@media (min-width: 2560px) { /* 2.5K/4K screens */
+  .container {
+    max-width: 2200px;
+  }
+}
+@media (min-width: 3200px) { /* 5K+ screens */
+  .container {
+    max-width: 98vw;
+  }
 }
 
 @theme inline {
