@@ -4,7 +4,7 @@
 
 The University of California Open Source Repository Browser Showcase (UC ORB Showcase) enhances the discovery and visibility of open source projects across the UC system, making it easier for researchers, students, and external collaborators to engage with relevant projects. By mapping and classifying open source efforts, it highlights the impact of contributions from UC campuses, increasing recognition and potential funding opportunities.
 
-#
+## Clone the Repository
 
 ```bash
 git clone https://github.com/UC-OSPO-Network/orb-showcase
@@ -20,7 +20,7 @@ git clone https://github.com/UC-OSPO-Network/orb-showcase
        POSTGRES_DB_URL=postgresql://postgres:orb@orb-db:5432/sample
        ```
    - **Frontend:**
-     - Create a file at `frontend/.env` with (example):
+     - Create a file at `frontend/.env` with:
        ```
        NEXT_PUBLIC_API_URL=http://localhost:8000
        ```
