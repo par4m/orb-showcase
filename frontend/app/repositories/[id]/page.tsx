@@ -23,6 +23,7 @@ type Repository = {
   updated_at?: string;
   pushed_at?: string;
   readme?: string;
+  default_branch?: string;
   // add other fields as needed
 };
 

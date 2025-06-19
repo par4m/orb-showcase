@@ -20,6 +20,7 @@ class Repository(SQLModel, table=True):
     contributors: List[str] | None = Field(default=None, sa_column=Column(JSON))
     readme: str | None
     homepage: str | None
+    default_branch: str | None
 
 
 class RepositoryResponse(BaseModel):
@@ -39,3 +40,4 @@ class RepositoryResponse(BaseModel):
     contributors: int | None = None
     readme: str | None
     homepage: str | None
+    default_branch: str | None

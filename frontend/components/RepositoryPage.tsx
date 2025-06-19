@@ -29,6 +29,7 @@ export interface Repository {
   contributors?: number;
   homepage?: string;
   readme?: string;
+  default_branch?: string;
 }
 
 interface Props {
@@ -37,17 +38,33 @@ interface Props {
   readme?: string;
 }
 
+interface ReadmeViewerProps {
+  source: string;
+  repoOwner: string;
+  repoName: string;
+  branch?: string;
+}
 
 function fixImageUrls(markdown: string, repoOwner: string, repoName: string, branch: string = "main") {
   // Replace markdown image syntax ![alt](relative.png)
   let result = markdown.replace(/!\[([^\]]*)\]\(((?!https?:\/\/)[^\)]+)\)/g, (match, alt, relPath) => {
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${relPath.replace(/^\.\//, '')}`;
+    const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
     return `![${alt}](${url})`;
   });
-  // Replace HTML <img src="relative.png">
+  // Replace HTML <img src="relative.png"> (quoted src)
   result = result.replace(/<img([^>]+)src=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${relPath.replace(/^\.\//, '')}`;
+    const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
     return `<img${before}src="${url}"`;
+  });
+  // Replace HTML <img src=relative.png> (unquoted src)
+  result = result.replace(/<img([^>]+)src=(?!["'])([^\s>]+)([\s>])/g, (match, before, relPath, after) => {
+    // Only rewrite if not an absolute URL
+    if (/^(https?:)?\//.test(relPath)) return match;
+    const cleanPath = relPath.replace(/^\.?\//, "");
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
+    return `<img${before}src="${url}"${after}`;
   });
   // Also fix github.com/blob URLs as before
   result = result.replace(
@@ -57,12 +74,6 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
   return result;
 }
 
-interface ReadmeViewerProps {
-  source: string;
-  repoOwner: string;
-  repoName: string;
-  branch?: string;
-}
 
 function ReadmeViewer({ source, repoOwner, repoName, branch = "main" }: ReadmeViewerProps) {
   return (
@@ -79,7 +90,7 @@ function ReadmeViewer({ source, repoOwner, repoName, branch = "main" }: ReadmeVi
 
 export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
   // Default branch can be improved if available from repo data
-  const branch = "main";
+  const branch = repo.default_branch || "main";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -125,7 +136,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                     <CardTitle className="text-sky-700">README</CardTitle>
                   </CardHeader>
                   <div className="max-w-4xl w-full overflow-x-auto">
-                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
+                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={repo.default_branch || "main"} />
                   </div>
                 </Card>
               )}

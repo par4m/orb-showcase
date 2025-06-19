@@ -61,6 +61,7 @@ def list_repositories(
     license: List[str] = Query(None, description="License filter"),
     owner: List[str] = Query(None, description="Organization/Owner filter"),
     readme: List[str] = Query(None, description="Readme"),
+    default_branch: List[str] = Query(None, description="Default branch"),
     sort: str = Query("stargazers_count", description="Sort by field: stargazers_count, forks_count, created_at"),
     order: str = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(None, ge=1, le=100, description="Number of results to return"),
@@ -117,6 +118,8 @@ def list_repositories(
         statement = statement.where(Repository.owner.in_(owner))
     if readme:
         statement = statement.where(Repository.readme.in_(readme))
+    if default_branch:
+        statement = statement.where(Repository.default_branch.in_(default_branch))
     if limit:
         statement = statement.limit(limit)
     if offset:
