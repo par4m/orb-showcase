@@ -1,24 +1,21 @@
 from typing import List
 from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session, select
-from sqlalchemy import func
-from database import get_session
+from sqlmodel import Session, select, func
 from models import Repository, RepositoryResponse
 from fastapi import HTTPException
-
+from database import get_session
  
 app = FastAPI()
 
-
-origins = ["http://localhost", "http://localhost:3000"]
-
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-
 
 @app.get("/languages", response_model=List[str])
 def get_languages(session: Session = Depends(get_session)):
@@ -63,6 +60,8 @@ def list_repositories(
     language: List[str] = Query(None, description="Language filter"),
     license: List[str] = Query(None, description="License filter"),
     owner: List[str] = Query(None, description="Organization/Owner filter"),
+    readme: List[str] = Query(None, description="Readme"),
+    default_branch: List[str] = Query(None, description="Default branch"),
     sort: str = Query("stargazers_count", description="Sort by field: stargazers_count, forks_count, created_at"),
     order: str = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(None, ge=1, le=100, description="Number of results to return"),
@@ -84,6 +83,7 @@ def list_repositories(
     - `order` (str, default="desc"): Sort order ('asc' or 'desc').
     - `limit` (int, optional): Number of results to return (1-100).
     - `offset` (int, optional): Number of results to skip.
+    - `readme` (List[str], optional): readme of repo.
 
     **Returns:**
 
@@ -91,7 +91,7 @@ def list_repositories(
     """
     statement = select(
         Repository,
-        func.coalesce(func.array_length(Repository.contributors, 1), 0).label('contributors_count')
+        func.coalesce(func.jsonb_array_length(Repository.contributors), 0).label('contributors_count')
     )
     sort_map = {
         "stargazers_count": Repository.stargazers_count,
@@ -106,7 +106,7 @@ def list_repositories(
     if q:
         search = f"%{q.lower()}%"
         statement = statement.where(
-            (Repository.name.ilike(search)) | (Repository.description.ilike(search))
+            (Repository.full_name.ilike(search)) | (Repository.description.ilike(search))
         )
     if university:
         statement = statement.where(Repository.university.in_(university))
@@ -116,7 +116,10 @@ def list_repositories(
         statement = statement.where(Repository.license.in_(license))
     if owner:
         statement = statement.where(Repository.owner.in_(owner))
-   
+    if readme:
+        statement = statement.where(Repository.readme.in_(readme))
+    if default_branch:
+        statement = statement.where(Repository.default_branch.in_(default_branch))
     if limit:
         statement = statement.limit(limit)
     if offset:
@@ -127,6 +130,10 @@ def list_repositories(
     for repo, contributors_count in results:
         repo_dict = repo.dict()
         repo_dict['contributors'] = contributors_count
+        # Convert datetime fields to ISO string for Pydantic
+        for dt_field in ["created_at", "updated_at", "pushed_at"]:
+            if dt_field in repo_dict and hasattr(repo_dict[dt_field], "isoformat"):
+                repo_dict[dt_field] = repo_dict[dt_field].isoformat()
         response.append(RepositoryResponse(**repo_dict))
     return response
 
@@ -147,8 +154,8 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     """
     statement = select(
         Repository,
-        func.coalesce(func.array_length(Repository.contributors, 1), 0).label('contributors_count')
-    ).where(Repository.id == id)
+        func.coalesce(func.jsonb_array_length(Repository.contributors), 0).label('contributors_count')
+    ).where(Repository.id == id)  # uses func from sqlmodel
     res = session.exec(statement)
     row = res.first()
     if not row:
@@ -156,6 +163,10 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     repo, contributors_count = row
     repo_dict = repo.dict()
     repo_dict['contributors'] = contributors_count
+    # Convert datetime fields to ISO string for Pydantic
+    for dt_field in ["created_at", "updated_at", "pushed_at"]:
+        if dt_field in repo_dict and hasattr(repo_dict[dt_field], "isoformat"):
+            repo_dict[dt_field] = repo_dict[dt_field].isoformat()
     return RepositoryResponse(**repo_dict)
 
 
@@ -175,3 +186,24 @@ def get_organizations(session: Session = Depends(get_session)):
         .distinct()
     )
     return sorted([owner for owner in result if owner])
+
+
+@app.get("/repositories/{id}/contributors", response_model=List[str])
+def get_contributors(id: int, session: Session = Depends(get_session)):
+    """
+    ### Get Contributors
+    Retrieves a list of unique contributors for a specific repository.
+    
+    **Parameters:**
+        - `id` (int): The unique identifier of the repository.
+
+    **Returns:**
+        - `List[str]`: List of unique contributors.
+    """
+    statement = select(Repository.contributors).where(Repository.id == id)
+    res = session.exec(statement)
+    contributors = res.first()
+    if contributors is None:
+        raise HTTPException(status_code=404, detail="Repository not found")
+    return [contributor for contributor in contributors if contributor]
+    

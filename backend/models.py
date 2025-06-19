@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlmodel import SQLModel, Field, Column, ARRAY, String
+from sqlmodel import SQLModel, Field, Column, ARRAY, String, JSON
 from typing import List
 
 class Repository(SQLModel, table=True):
@@ -17,8 +17,10 @@ class Repository(SQLModel, table=True):
     forks_count: int | None
     subscribers_count: float | None
     created_at: str | None
-    contributors: str | None = Field(default=None, sa_column=Column(ARRAY(String)))
+    contributors: List[str] | None = Field(default=None, sa_column=Column(JSON))
+    readme: str | None
     homepage: str | None
+    default_branch: str | None
 
 
 class RepositoryResponse(BaseModel):
@@ -36,4 +38,6 @@ class RepositoryResponse(BaseModel):
     subscribers_count: float | None
     created_at: str | None
     contributors: int | None = None
+    readme: str | None
     homepage: str | None
+    default_branch: str | None
