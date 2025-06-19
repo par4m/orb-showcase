@@ -14,14 +14,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 type Repository = {
   id: number;
   full_name: string;
-  description: string;
-  language: string;
-  license: string;
-  owner: string;
+  description?: string;
+  language?: string;
+  license?: string;
+  owner?: string;
   contributors?: number;
   created_at?: string;
   updated_at?: string;
   pushed_at?: string;
+  readme?: string;
   // add other fields as needed
 };
 
@@ -65,12 +66,29 @@ export default function RepositoryDetailPage() {
     // Optimizations for instant UI:
     initialData: () => repositories.find(r => String(r.id) === id),
     placeholderData: () => repositories.find(r => String(r.id) === id),
-    staleTime: 300_000, // 5 min
-    cacheTime: 600_000, // 10 min
+    staleTime: 300_000 // 5 min
   });
   // For even faster navigation, prefetch this query on card hover using queryClient.prefetchQuery.
 
-  const displayRepo = repo || fetchedRepo;
+  const displayRepo: Repository | undefined = repo || fetchedRepo;
+
+  // Fetch contributors for the repository
+  const {
+    data: contributors = [],
+    isLoading: isContributorsLoading,
+    error: contributorsError
+  } = useQuery<any[]>({
+    queryKey: ["repository-contributors", id],
+    queryFn: async () => {
+      const res = await fetch(`${API_URL}/repositories/${id}/contributors`);
+      if (!res.ok) throw new Error("Failed to fetch contributors");
+      return res.json();
+    },
+    enabled: !!id,
+    staleTime: 300_000,
+  });
+
+
   const is404 = (
     shouldFetch &&
     isError &&
@@ -111,13 +129,18 @@ export default function RepositoryDetailPage() {
     </>
   );
   if (!displayRepo) return null;
+
   return (
     <>
       <Head>
         <title>{displayRepo.full_name} | ORB Showcase</title>
         <meta name="description" content={displayRepo.description || "Repository details"} />
       </Head>
-      <RepositoryPage repo={displayRepo} />
+      <RepositoryPage
+        repo={displayRepo}
+        contributors={Array.isArray(contributors) ? contributors : []}
+       
+      />
     </>
   );
 }

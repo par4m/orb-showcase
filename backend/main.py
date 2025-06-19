@@ -60,6 +60,7 @@ def list_repositories(
     language: List[str] = Query(None, description="Language filter"),
     license: List[str] = Query(None, description="License filter"),
     owner: List[str] = Query(None, description="Organization/Owner filter"),
+    readme: List[str] = Query(None, description="Readme"),
     sort: str = Query("stargazers_count", description="Sort by field: stargazers_count, forks_count, created_at"),
     order: str = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(None, ge=1, le=100, description="Number of results to return"),
@@ -81,6 +82,7 @@ def list_repositories(
     - `order` (str, default="desc"): Sort order ('asc' or 'desc').
     - `limit` (int, optional): Number of results to return (1-100).
     - `offset` (int, optional): Number of results to skip.
+    - `readme` (List[str], optional): readme of repo.
 
     **Returns:**
 
@@ -113,7 +115,8 @@ def list_repositories(
         statement = statement.where(Repository.license.in_(license))
     if owner:
         statement = statement.where(Repository.owner.in_(owner))
-   
+    if readme:
+        statement = statement.where(Repository.readme.in_(readme))
     if limit:
         statement = statement.limit(limit)
     if offset:
@@ -180,3 +183,24 @@ def get_organizations(session: Session = Depends(get_session)):
         .distinct()
     )
     return sorted([owner for owner in result if owner])
+
+
+@app.get("/repositories/{id}/contributors", response_model=List[str])
+def get_contributors(id: int, session: Session = Depends(get_session)):
+    """
+    ### Get Contributors
+    Retrieves a list of unique contributors for a specific repository.
+    
+    **Parameters:**
+        - `id` (int): The unique identifier of the repository.
+
+    **Returns:**
+        - `List[str]`: List of unique contributors.
+    """
+    statement = select(Repository.contributors).where(Repository.id == id)
+    res = session.exec(statement)
+    contributors = res.first()
+    if contributors is None:
+        raise HTTPException(status_code=404, detail="Repository not found")
+    return [contributor for contributor in contributors if contributor]
+    

@@ -1,9 +1,15 @@
 import React from "react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeHighlight from 'rehype-highlight';
+
+import 'github-markdown-css/github-markdown-light.css';
 import { getUniversityDisplayName } from "@/lib/universities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code } from "lucide-react";
+import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User } from "lucide-react";
 import Link from "next/link";
 
 export interface Repository {
@@ -22,13 +28,59 @@ export interface Repository {
   created_at?: string;
   contributors?: number;
   homepage?: string;
+  readme?: string;
 }
 
 interface Props {
   repo: Repository;
+  contributors?: string[];
+  readme?: string;
 }
 
-export const RepositoryPage: React.FC<Props> = ({ repo }) => {
+
+function fixImageUrls(markdown: string, repoOwner: string, repoName: string, branch: string = "main") {
+  // Replace markdown image syntax ![alt](relative.png)
+  let result = markdown.replace(/!\[([^\]]*)\]\(((?!https?:\/\/)[^\)]+)\)/g, (match, alt, relPath) => {
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${relPath.replace(/^\.\//, '')}`;
+    return `![${alt}](${url})`;
+  });
+  // Replace HTML <img src="relative.png">
+  result = result.replace(/<img([^>]+)src=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${relPath.replace(/^\.\//, '')}`;
+    return `<img${before}src="${url}"`;
+  });
+  // Also fix github.com/blob URLs as before
+  result = result.replace(
+    /https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/([^\")\s]+)/g,
+    'https://raw.githubusercontent.com/$1/$2/$3/$4'
+  );
+  return result;
+}
+
+interface ReadmeViewerProps {
+  source: string;
+  repoOwner: string;
+  repoName: string;
+  branch?: string;
+}
+
+function ReadmeViewer({ source, repoOwner, repoName, branch = "main" }: ReadmeViewerProps) {
+  return (
+    <div className="markdown-body p-4">
+      <ReactMarkdown
+        children={fixImageUrls(source, repoOwner, repoName, branch)}
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw, rehypeHighlight]}
+      />
+    </div>
+  );
+}
+
+
+export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
+  // Default branch can be improved if available from repo data
+  const branch = "main";
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-10">
@@ -67,16 +119,14 @@ export const RepositoryPage: React.FC<Props> = ({ repo }) => {
                   <p>{repo.description}</p>
                 </CardContent>
               </Card>
-              {repo.homepage && (
+              {repo.readme && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sky-700">Homepage</CardTitle>
+                    <CardTitle className="text-sky-700">README</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline">
-                      {repo.homepage}
-                    </a>
-                  </CardContent>
+                  <div className="max-w-4xl w-full overflow-x-auto">
+                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
+                  </div>
                 </Card>
               )}
             </div>
@@ -104,6 +154,12 @@ export const RepositoryPage: React.FC<Props> = ({ repo }) => {
                       <span className="text-sm">{repo.license}</span>
                     </div>
                   )}
+                  {repo.homepage && (
+                    <div className="flex items-center gap-2">
+                      <ExternalLink className="w-4 h-4 text-gray-500" />
+                      <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline"><span className="text-sm">{repo.homepage}</span></a>
+                    </div>
+                  )}
                   {repo.html_url && (
                     <div className="pt-4">
                       <Link href={repo.html_url} target="_blank" rel="noopener noreferrer">
@@ -118,11 +174,23 @@ export const RepositoryPage: React.FC<Props> = ({ repo }) => {
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sky-700">Contributors</CardTitle>
+                  <CardTitle className="text-sky-700">Contributors - {repo.contributors}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <p className="text-xs text-gray-500 pt-2">{repo.contributors} contributors</p>
+                    {contributors && contributors.length > 0 ? (
+                  <ul className="text-xs text-gray-700 pt-2 space-y-1">
+                    {contributors.slice(0, 5).map((name, idx) => (
+                      <li key={name + idx} className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-gray-500" />
+                        <span>{name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                      ) : (
+                      <p className="text-xs text-gray-500 pt-2">No contributors found.</p>
+                      )}
                   </div>
                 </CardContent>
               </Card>
@@ -135,4 +203,3 @@ export const RepositoryPage: React.FC<Props> = ({ repo }) => {
 };
 
 export default RepositoryPage;
-
