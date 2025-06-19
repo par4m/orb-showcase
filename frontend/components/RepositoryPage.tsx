@@ -66,6 +66,19 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
     const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
     return `<img${before}src="${url}"${after}`;
   });
+  // Replace HTML <source srcset="relative.png"> (quoted srcset)
+  result = result.replace(/<source([^>]+)srcset=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
+    const cleanPath = relPath.replace(/^\.?\//, "");
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
+    return `<source${before}srcset="${url}"`;
+  });
+  // Replace HTML <source srcset=relative.png> (unquoted srcset)
+  result = result.replace(/<source([^>]+)srcset=(?!["'])([^\s>]+)([\s>])/g, (match, before, relPath, after) => {
+    if (/^(https?:)?\//.test(relPath)) return match;
+    const cleanPath = relPath.replace(/^\.?\//, "");
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
+    return `<source${before}srcset="${url}"${after}`;
+  });
   // Also fix github.com/blob URLs as before
   result = result.replace(
     /https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/([^\")\s]+)/g,
