@@ -49,13 +49,13 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
   // Replace markdown image syntax ![alt](relative.png)
   let result = markdown.replace(/!\[([^\]]*)\]\(((?!https?:\/\/)[^\)]+)\)/g, (match, alt, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
     return `![${alt}](${url})`;
   });
   // Replace HTML <img src="relative.png"> (quoted src)
   result = result.replace(/<img([^>]+)src=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
     return `<img${before}src="${url}"`;
   });
   // Replace HTML <img src=relative.png> (unquoted src)
@@ -63,20 +63,20 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
     // Only rewrite if not an absolute URL
     if (/^(https?:)?\//.test(relPath)) return match;
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
     return `<img${before}src="${url}"${after}`;
   });
   // Replace HTML <source srcset="relative.png"> (quoted srcset)
   result = result.replace(/<source([^>]+)srcset=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
     return `<source${before}srcset="${url}"`;
   });
   // Replace HTML <source srcset=relative.png> (unquoted srcset)
   result = result.replace(/<source([^>]+)srcset=(?!["'])([^\s>]+)([\s>])/g, (match, before, relPath, after) => {
     if (/^(https?:)?\//.test(relPath)) return match;
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
     return `<source${before}srcset="${url}"${after}`;
   });
   // Also fix github.com/blob URLs as before
