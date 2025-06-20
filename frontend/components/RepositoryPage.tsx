@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -39,7 +39,7 @@ interface Props {
 }
 
 interface ReadmeViewerProps {
-  source: string;
+  source?: string | null;
   repoOwner: string;
   repoName: string;
   branch?: string;
@@ -88,19 +88,35 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
   return result;
 }
 
+function ReadmeViewer({ source, repoOwner, repoName, branch }: ReadmeViewerProps) {
+  const [readme, setReadme] = useState<string | null>(source || null);
 
-function ReadmeViewer({ source, repoOwner, repoName, branch  }: ReadmeViewerProps) {
+  useEffect(() => {
+    if (!readme && repoOwner && repoName && branch) {
+      // Try to fetch README.md from GitHub
+      const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/README.md`;
+      fetch(url)
+        .then(res => res.ok ? res.text() : null)
+        .then(text => {
+          if (text) setReadme(text);
+        });
+    }
+  }, [readme, repoOwner, repoName, branch]);
+
+  if (!readme) {
+    return <div className="markdown-body p-4 text-gray-400">No README found.</div>;
+  }
+
   return (
     <div className="markdown-body p-4">
       <ReactMarkdown
-        children={fixImageUrls(source, repoOwner, repoName, branch)}
+        children={fixImageUrls(readme, repoOwner, repoName, branch)}
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeHighlight]}
       />
     </div>
   );
 }
-
 
 export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
   const branch = repo.default_branch || "main";
@@ -143,16 +159,14 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                   <p>{repo.description}</p>
                 </CardContent>
               </Card>
-              {repo.readme && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sky-700">README</CardTitle>
-                  </CardHeader>
-                  <div className="max-w-4xl w-full overflow-x-auto">
-                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
-                  </div>
-                </Card>
-              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sky-700">README</CardTitle>
+                </CardHeader>
+                <div className="max-w-4xl w-full overflow-x-auto">
+                  <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
+                </div>
+              </Card>
             </div>
             <div className="space-y-6">
               <Card>
