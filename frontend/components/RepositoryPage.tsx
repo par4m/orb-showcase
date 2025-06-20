@@ -45,7 +45,7 @@ interface ReadmeViewerProps {
   branch?: string;
 }
 
-function fixImageUrls(markdown: string, repoOwner: string, repoName: string, branch: string = "main") {
+function fixImageUrls(markdown: string, repoOwner: string, repoName: string, branch?: string ) {
   // Replace markdown image syntax ![alt](relative.png)
   let result = markdown.replace(/!\[([^\]]*)\]\(((?!https?:\/\/)[^\)]+)\)/g, (match, alt, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
@@ -88,7 +88,7 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
 }
 
 
-function ReadmeViewer({ source, repoOwner, repoName, branch = "main" }: ReadmeViewerProps) {
+function ReadmeViewer({ source, repoOwner, repoName, branch  }: ReadmeViewerProps) {
   return (
     <div className="markdown-body p-4">
       <ReactMarkdown
@@ -149,7 +149,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                     <CardTitle className="text-sky-700">README</CardTitle>
                   </CardHeader>
                   <div className="max-w-4xl w-full overflow-x-auto">
-                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={repo.default_branch || "main"} />
+                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={repo.default_branch} />
                   </div>
                 </Card>
               )}
