@@ -46,16 +46,17 @@ interface ReadmeViewerProps {
 }
 
 function fixImageUrls(markdown: string, repoOwner: string, repoName: string, branch?: string ) {
+  const safeBranch = branch || "main";
   // Replace markdown image syntax ![alt](relative.png)
   let result = markdown.replace(/!\[([^\]]*)\]\(((?!https?:\/\/)[^\)]+)\)/g, (match, alt, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `![${alt}](${url})`;
   });
   // Replace HTML <img src="relative.png"> (quoted src)
   result = result.replace(/<img([^>]+)src=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `<img${before}src="${url}"`;
   });
   // Replace HTML <img src=relative.png> (unquoted src)
@@ -63,20 +64,20 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
     // Only rewrite if not an absolute URL
     if (/^(https?:)?\//.test(relPath)) return match;
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `<img${before}src="${url}"${after}`;
   });
   // Replace HTML <source srcset="relative.png"> (quoted srcset)
   result = result.replace(/<source([^>]+)srcset=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `<source${before}srcset="${url}"`;
   });
   // Replace HTML <source srcset=relative.png> (unquoted srcset)
   result = result.replace(/<source([^>]+)srcset=(?!["'])([^\s>]+)([\s>])/g, (match, before, relPath, after) => {
     if (/^(https?:)?\//.test(relPath)) return match;
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `<source${before}srcset="${url}"${after}`;
   });
   // Also fix github.com/blob URLs as before
@@ -102,7 +103,6 @@ function ReadmeViewer({ source, repoOwner, repoName, branch  }: ReadmeViewerProp
 
 
 export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
-  // Default branch can be improved if available from repo data
   const branch = repo.default_branch || "main";
 
   return (
@@ -149,7 +149,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                     <CardTitle className="text-sky-700">README</CardTitle>
                   </CardHeader>
                   <div className="max-w-4xl w-full overflow-x-auto">
-                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={repo.default_branch} />
+                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
                   </div>
                 </Card>
               )}
