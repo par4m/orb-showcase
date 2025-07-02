@@ -55,9 +55,15 @@ git clone https://github.com/UC-OSPO-Network/orb-showcase
 
    From the project root, run:
    ```bash
-   docker-compose up
+   docker-compose up --build 
    ```
    This will start the backend, frontend, and connect to your running Postgres database (all on the `local-dev-net` Docker network).
+
+   **Tip:** For subsequent runs (when no code or dependency changes are made), you can use:
+   ```bash
+   docker-compose up
+   ```
+   for faster startup.
 
 4. **Accessing the App**
    - **Frontend:** http://localhost:3000
