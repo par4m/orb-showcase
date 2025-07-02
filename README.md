@@ -27,7 +27,14 @@ git clone https://github.com/UC-OSPO-Network/orb-showcase
     
 2. **Database Setup**
 
-   If you haven't already started the database container:
+   Create `local-dev-network` if it doesn't exist:
+
+   ```bash
+   docker network create local-dev-net
+   ```
+
+   Start the database container:
+   
    ```bash
    docker run -d \
      --name orb-db \
