@@ -16,6 +16,7 @@ interface MultiSelectComboboxProps {
 
 export function MultiSelectCombobox({ options, selected, setSelected, placeholder, label, getLabel, allLabel }: MultiSelectComboboxProps) {
   const [open, setOpen] = React.useState(false);
+  const [hovered, setHovered] = React.useState(false);
 
   // Sort options: selected first (in their original order), then unselected (in their original order)
   const sortedOptions = [
@@ -33,13 +34,25 @@ export function MultiSelectCombobox({ options, selected, setSelected, placeholde
             role="combobox"
             className="w-full flex flex-row flex-wrap items-center justify-between text-left min-h-10 px-3 h-auto"
             style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onFocus={() => setHovered(true)}
+            onBlur={() => setHovered(false)}
           >
             <span className="flex flex-wrap gap-2 items-center flex-1 min-h-6">
               {selected.length === 0 ? (
                 <span className="text-muted-foreground">{allLabel || placeholder || "Select..."}</span>
               ) : (
                 selected.map((v) => (
-                  <span key={v} className="inline-flex items-center bg-gray-100 rounded px-2 py-1 text-sm font-medium">
+                  <span
+                    key={v}
+                    className={
+                      `inline-flex items-center rounded px-2 py-1 text-sm font-medium border transition-colors ` +
+                      (open || hovered
+                        ? "bg-primary/10 border-primary text-primary"
+                        : "bg-gray-100 border-gray-200 text-foreground")
+                    }
+                  >
                     <span
                       role="button"
                       tabIndex={0}
