@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User } from "lucide-react";
 import Link from "next/link";
+import { ContributorsScrollArea } from "@/components/ContributorsScrollArea";
 
 export interface Repository {
   id: number;
@@ -153,14 +154,6 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
               </div>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sky-700">Description</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p>{repo.description}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
                   <CardTitle className="text-sky-700">README</CardTitle>
                 </CardHeader>
                 <div className="max-w-4xl w-full overflow-x-auto">
@@ -215,21 +208,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                   <CardTitle className="text-sky-700">Contributors - {repo.contributors}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {contributors && contributors.length > 0 ? (
-                  <ul className="text-xs text-gray-700 pt-2 space-y-1">
-                    {contributors.slice(0, 5).map((name, idx) => (
-                      <li key={name + idx} className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <span>{name}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                      ) : (
-                      <p className="text-xs text-gray-500 pt-2">No contributors found.</p>
-                      )}
-                  </div>
+                  <ContributorsScrollArea contributors={contributors || []} />
                 </CardContent>
               </Card>
             </div>
