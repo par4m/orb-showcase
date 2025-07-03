@@ -8,7 +8,7 @@ interface ContributorsScrollAreaProps {
 
 export function ContributorsScrollArea({ contributors }: ContributorsScrollAreaProps) {
   return (
-    <ScrollArea className="h-[13.8rem] w-full max-w-xs bg-white border-t border-gray-200 shadow-sm rounded-lg">
+    <ScrollArea className="h-[13.8rem] w-full max-w-xs bg-white border-t border-gray-100 shadow-sm rounded-lg">
       <div className="">
         {contributors.length === 0 && (
           <div className="text-sm text-gray-500 pt-2 text-center">No contributors found.</div>
