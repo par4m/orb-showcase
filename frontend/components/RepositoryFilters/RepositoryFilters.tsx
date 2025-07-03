@@ -20,6 +20,7 @@ interface RepositoryFiltersProps {
   licenses: string[];
   organizations: string[];
   onApplyFilters: () => void;
+  onResetFilters: () => void;
 }
 
 export const RepositoryFilters: React.FC<RepositoryFiltersProps> = ({
@@ -33,6 +34,7 @@ export const RepositoryFilters: React.FC<RepositoryFiltersProps> = ({
   licenses = [],
   organizations = [],
   onApplyFilters,
+  onResetFilters,
 }) => (
   <div className="space-y-6">
     <div>
@@ -101,6 +103,9 @@ export const RepositoryFilters: React.FC<RepositoryFiltersProps> = ({
     </div>
     <Button className="w-full" onClick={onApplyFilters}>
       Apply Filters
+    </Button>
+    <Button className="w-full" variant="outline" onClick={onResetFilters}>
+      Reset Filters
     </Button>
   </div>
 );

@@ -24,29 +24,21 @@ export function RepositoriesPageClient() {
   const [owner, setOwner] = useState("__all__");
 
   // Fetch filter options
-  const { data: universities } = useQuery({
+  const { data: universities = [] } = useQuery({
     queryKey: ["universities"],
     queryFn: () => fetch(`${API_URL}/universities`).then(res => res.json()),
-    cacheTime: 600_000, // 10 min
-    staleTime: 300_000, // 5 min
   });
-  const { data: languages } = useQuery({
+  const { data: languages = [] } = useQuery({
     queryKey: ["languages"],
     queryFn: () => fetch(`${API_URL}/languages`).then(res => res.json()),
-    cacheTime: 600_000,
-    staleTime: 300_000,
   });
-  const { data: licenses } = useQuery({
+  const { data: licenses = [] } = useQuery({
     queryKey: ["licenses"],
     queryFn: () => fetch(`${API_URL}/licenses`).then(res => res.json()),
-    cacheTime: 600_000,
-    staleTime: 300_000,
   });
-  const { data: organizations } = useQuery({
+  const { data: organizations = [] } = useQuery({
     queryKey: ["organizations"],
     queryFn: () => fetch(`${API_URL}/organizations`).then(res => res.json()),
-    cacheTime: 600_000,
-    staleTime: 300_000,
   });
 
     // Fetch all repositories once on mount
@@ -110,6 +102,15 @@ export function RepositoriesPageClient() {
 
   const handleApplyFilters = () => {}; // No-op, all filtering is client-side
 
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setUniversity("__all__");
+    setLanguage("__all__");
+    setLicense("__all__");
+    setOwner("__all__");
+    setPage(1);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-10">
@@ -144,11 +145,12 @@ export function RepositoriesPageClient() {
                 setLicense={setLicense}
                 owner={owner}
                 setOwner={setOwner}
-                universities={universities || []}
-                languages={languages || []}
-                licenses={licenses || []}
-                organizations={organizations || []}
+                universities={universities}
+                languages={languages}
+                licenses={licenses}
+                organizations={organizations}
                 onApplyFilters={handleApplyFilters}
+                onResetFilters={handleResetFilters}
               />
             </div>
             <div className="space-y-6">
