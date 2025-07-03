@@ -18,10 +18,10 @@ export function RepositoriesPageClient() {
   const setRepositories = useRepositoriesStore((state) => state.setRepositories);
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
-  const [university, setUniversity] = useState("__all__");
-  const [language, setLanguage] = useState("__all__");
-  const [license, setLicense] = useState("__all__");
-  const [owner, setOwner] = useState("__all__");
+  const [universitiesSelected, setUniversitiesSelected] = useState<string[]>([]);
+  const [languagesSelected, setLanguagesSelected] = useState<string[]>([]);
+  const [licensesSelected, setLicensesSelected] = useState<string[]>([]);
+  const [ownersSelected, setOwnersSelected] = useState<string[]>([]);
 
   // Fetch filter options
   const { data: universities = [] } = useQuery({
@@ -74,10 +74,10 @@ export function RepositoriesPageClient() {
   const filteredRepositories = React.useMemo(() => {
     if (!repositories) return [];
     let result = repositories;
-    if (university !== "__all__") result = result.filter(r => r.university === university);
-    if (language !== "__all__") result = result.filter(r => r.language === language);
-    if (license !== "__all__") result = result.filter(r => r.license === license);
-    if (owner !== "__all__") result = result.filter(r => r.owner === owner);
+    if (universitiesSelected.length > 0) result = result.filter(r => r.university && universitiesSelected.includes(r.university));
+    if (languagesSelected.length > 0) result = result.filter(r => r.language && languagesSelected.includes(r.language));
+    if (licensesSelected.length > 0) result = result.filter(r => r.license && licensesSelected.includes(r.license));
+    if (ownersSelected.length > 0) result = result.filter(r => r.owner && ownersSelected.includes(r.owner));
     if (searchTerm.trim()) {
       const fuzzy = fuzzysort.go(
         searchTerm,
@@ -87,12 +87,12 @@ export function RepositoriesPageClient() {
       result = fuzzy.map(r => r.obj);
     }
     return result;
-  }, [repositories, university, language, license, owner, searchTerm]);
+  }, [repositories, universitiesSelected, languagesSelected, licensesSelected, ownersSelected, searchTerm]);
 
   // Pagination state
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(20);
-  React.useEffect(() => { setPage(1); }, [searchTerm, university, language, license, owner, repositories]);
+  React.useEffect(() => { setPage(1); }, [searchTerm, universitiesSelected, languagesSelected, licensesSelected, ownersSelected, repositories]);
   const totalItems = filteredRepositories.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const pagedRepositories = React.useMemo(() =>
@@ -104,10 +104,10 @@ export function RepositoriesPageClient() {
 
   const handleResetFilters = () => {
     setSearchTerm("");
-    setUniversity("__all__");
-    setLanguage("__all__");
-    setLicense("__all__");
-    setOwner("__all__");
+    setUniversitiesSelected([]);
+    setLanguagesSelected([]);
+    setLicensesSelected([]);
+    setOwnersSelected([]);
     setPage(1);
   };
 
@@ -137,14 +137,14 @@ export function RepositoriesPageClient() {
               <RepositoryFilters
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
-                university={university}
-                setUniversity={setUniversity}
-                language={language}
-                setLanguage={setLanguage}
-                license={license}
-                setLicense={setLicense}
-                owner={owner}
-                setOwner={setOwner}
+                universitiesSelected={universitiesSelected}
+                setUniversitiesSelected={setUniversitiesSelected}
+                languagesSelected={languagesSelected}
+                setLanguagesSelected={setLanguagesSelected}
+                licensesSelected={licensesSelected}
+                setLicensesSelected={setLicensesSelected}
+                ownersSelected={ownersSelected}
+                setOwnersSelected={setOwnersSelected}
                 universities={universities}
                 languages={languages}
                 licenses={licenses}
