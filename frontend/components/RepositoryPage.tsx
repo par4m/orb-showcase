@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User } from "lucide-react";
+import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User, University, School } from "lucide-react";
 import Link from "next/link";
 import { ContributorsScrollArea } from "@/components/ContributorsScrollArea";
 
@@ -146,11 +146,11 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
               <div>
                 <h1 className="text-3xl font-bold text-sky-800 mb-2">{repo.full_name}</h1>
                 <p className="text-lg text-gray-600 mb-4">{repo.description}</p>
-                <div className="flex flex-wrap gap-2 mb-6">
+                {/* <div className="flex flex-wrap gap-2 mb-6">
                   {repo.language && <Badge variant="outline" className="text-sm">{repo.language}</Badge>}
                   {repo.license && <Badge variant="secondary" className="text-sm">{repo.license}</Badge>}
                   {repo.university && <Badge variant="secondary" className="text-sm">{getUniversityDisplayName(repo.university)}</Badge>}
-                </div>
+                </div> */}
               
               </div>
               <Card>
@@ -169,7 +169,12 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                       <div className="flex items-center gap-2">
                         <Code className="w-4 h-4 text-gray-500" />
                         <span className="font-medium">License:</span>
-                        <span className="text-sm">{repo.license || "-"}</span>
+                        <span className="text-md">{repo.license || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <School className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">University:</span>
+                        <span className="text-md">{getUniversityDisplayName(repo.university) || "-"}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <ExternalLink className="w-4 h-4 text-gray-500" />
@@ -197,13 +202,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                   <CardTitle className="text-sky-700">Repository Info</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {repo.owner && (
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">{repo.owner}</span>
-                    </div>
-                  )}
-                    <div className="flex gap-4 mb-8">
+                    <div className="flex gap-4 mb-4">
                   <div className="flex items-center gap-1 text-gray-600">
                     <Star className="w-4 h-4" />
                     <span>{repo.stargazers_count} stars</span>
