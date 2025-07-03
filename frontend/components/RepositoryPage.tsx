@@ -9,6 +9,7 @@ import { getUniversityDisplayName } from "@/lib/universities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User } from "lucide-react";
 import Link from "next/link";
 import { ContributorsScrollArea } from "@/components/ContributorsScrollArea";
@@ -119,14 +120,27 @@ function ReadmeViewer({ source, repoOwner, repoName, branch }: ReadmeViewerProps
   );
 }
 
+function useOrgInfo(org: string | undefined) {
+  const [orgInfo, setOrgInfo] = useState<{ blog?: string; html_url?: string } | null>(null);
+  useEffect(() => {
+    if (!org) return;
+    fetch(`https://api.github.com/orgs/${org}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) setOrgInfo({ blog: data.blog, html_url: data.html_url });
+      });
+  }, [org]);
+  return orgInfo;
+}
+
 export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
   const branch = repo.default_branch || "main";
+  const orgInfo = useOrgInfo(repo.owner);
 
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-10">
         <div className="container max-w-6xl">
-          
           <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
             <div className="space-y-6">
               <div>
@@ -137,28 +151,44 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                   {repo.license && <Badge variant="secondary" className="text-sm">{repo.license}</Badge>}
                   {repo.university && <Badge variant="secondary" className="text-sm">{getUniversityDisplayName(repo.university)}</Badge>}
                 </div>
-                <div className="flex gap-4 mb-8">
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <Star className="w-4 h-4" />
-                    <span>{repo.stargazers_count} stars</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <GitFork className="w-4 h-4" />
-                    <span>{repo.forks_count} forks</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <Eye className="w-4 h-4" />
-                    <span>{repo.subscribers_count} views</span>
-                  </div>
-                </div>
+              
               </div>
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-sky-700">README</CardTitle>
-                </CardHeader>
-                <div className="max-w-4xl w-full overflow-x-auto">
-                  <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
-                </div>
+                <Tabs defaultValue="overview" className="w-full">
+                  <TabsList className="w-full flex">
+                    <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
+                    <TabsTrigger value="readme" className="flex-1">README</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="overview">
+                    <div className="p-4 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">Development Team:</span>
+                        <a href={orgInfo?.html_url} target="_blank" rel="noopener noreferrer" className="text-sky-600">{repo.owner} </a>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Code className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">License:</span>
+                        <span className="text-sm">{repo.license || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ExternalLink className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">External Links:</span>
+                        <span className="flex flex-col gap-1">
+              
+                          {orgInfo?.blog && orgInfo.blog !== "" && (
+                            <a href={orgInfo.blog} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline">Blog</a>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="readme">
+                    <div className="max-w-4xl w-full overflow-x-auto">
+                      <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </Card>
             </div>
             <div className="space-y-6">
@@ -173,16 +203,30 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                       <span className="text-sm">{repo.owner}</span>
                     </div>
                   )}
+                    <div className="flex gap-4 mb-8">
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Star className="w-4 h-4" />
+                    <span>{repo.stargazers_count} stars</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <GitFork className="w-4 h-4" />
+                    <span>{repo.forks_count} forks</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Eye className="w-4 h-4" />
+                    <span>{repo.subscribers_count} views</span>
+                  </div>
+                </div>
                   {repo.created_at && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-500" />
                       <span className="text-sm">Created {repo.created_at.split("T")[0]}</span>
                     </div>
                   )}
-                  {repo.license && (
+                  {repo.language && (
                     <div className="flex items-center gap-2">
                       <Code className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">{repo.license}</span>
+                      <span className="text-sm">{repo.language}</span>
                     </div>
                   )}
                   {repo.homepage && (
