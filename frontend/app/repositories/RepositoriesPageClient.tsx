@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRepositoriesStore } from "@/store/repositories";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -16,12 +16,18 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export function RepositoriesPageClient() {
   const repositories = useRepositoriesStore((state) => state.repositories);
   const setRepositories = useRepositoriesStore((state) => state.setRepositories);
+  // Use zustand for filters
+  const searchTerm = useRepositoriesStore((state) => state.searchTerm);
+  const setSearchTerm = useRepositoriesStore((state) => state.setSearchTerm);
+  const universitiesSelected = useRepositoriesStore((state) => state.universitiesSelected);
+  const setUniversitiesSelected = useRepositoriesStore((state) => state.setUniversitiesSelected);
+  const languagesSelected = useRepositoriesStore((state) => state.languagesSelected);
+  const setLanguagesSelected = useRepositoriesStore((state) => state.setLanguagesSelected);
+  const licensesSelected = useRepositoriesStore((state) => state.licensesSelected);
+  const setLicensesSelected = useRepositoriesStore((state) => state.setLicensesSelected);
+  const ownersSelected = useRepositoriesStore((state) => state.ownersSelected);
+  const setOwnersSelected = useRepositoriesStore((state) => state.setOwnersSelected);
   const searchParams = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [universitiesSelected, setUniversitiesSelected] = useState<string[]>([]);
-  const [languagesSelected, setLanguagesSelected] = useState<string[]>([]);
-  const [licensesSelected, setLicensesSelected] = useState<string[]>([]);
-  const [ownersSelected, setOwnersSelected] = useState<string[]>([]);
 
   // Fetch filter options
   const { data: universities = [] } = useQuery({
@@ -41,7 +47,7 @@ export function RepositoriesPageClient() {
     queryFn: () => fetch(`${API_URL}/organizations`).then(res => res.json()),
   });
 
-    // Fetch all repositories once on mount
+  // Fetch all repositories once on mount
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
 
@@ -65,10 +71,10 @@ export function RepositoriesPageClient() {
   }, [setRepositories, repositories.length]);
 
   // Sync search param to state
-  React.useEffect(() => {
+  useEffect(() => {
     const urlSearch = searchParams.get("search");
     if (urlSearch) setSearchTerm(urlSearch);
-  }, [searchParams]);
+  }, [searchParams, setSearchTerm]);
 
   // Client-side filtering (all filters and search)
   const filteredRepositories = React.useMemo(() => {

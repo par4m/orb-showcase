@@ -21,9 +21,31 @@ export interface Repository {
 interface RepositoriesState {
   repositories: Repository[];
   setRepositories: (repos: Repository[]) => void;
+  // Filters
+  searchTerm: string;
+  setSearchTerm: (v: string) => void;
+  universitiesSelected: string[];
+  setUniversitiesSelected: (v: string[]) => void;
+  languagesSelected: string[];
+  setLanguagesSelected: (v: string[]) => void;
+  licensesSelected: string[];
+  setLicensesSelected: (v: string[]) => void;
+  ownersSelected: string[];
+  setOwnersSelected: (v: string[]) => void;
 }
 
 export const useRepositoriesStore = create<RepositoriesState>((set) => ({
   repositories: [],
   setRepositories: (repos) => set({ repositories: repos }),
+  // Filters
+  searchTerm: "",
+  setSearchTerm: (v) => set({ searchTerm: v }),
+  universitiesSelected: [],
+  setUniversitiesSelected: (v) => set({ universitiesSelected: v }),
+  languagesSelected: [],
+  setLanguagesSelected: (v) => set({ languagesSelected: v }),
+  licensesSelected: [],
+  setLicensesSelected: (v) => set({ licensesSelected: v }),
+  ownersSelected: [],
+  setOwnersSelected: (v) => set({ ownersSelected: v }),
 }));
