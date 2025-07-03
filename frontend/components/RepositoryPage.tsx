@@ -155,9 +155,9 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
               </div>
               <Card>
                 <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="w-full flex">
-                    <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
-                    <TabsTrigger value="readme" className="flex-1">README</TabsTrigger>
+                  <TabsList className="w-full flex border-b border-gray-200 p-0 gap-0 bg-white">
+                    <TabsTrigger value="overview" className="flex-1 h-10 m-0 rounded-none bg-transparent data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-b-2 data-[state=active]:border-sky-700 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">Overview</TabsTrigger>
+                    <TabsTrigger value="readme" className="flex-1 h-10 m-0 rounded-none bg-transparent data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-b-2 data-[state=active]:border-sky-700 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">README</TabsTrigger>
                   </TabsList>
                   <TabsContent value="overview">
                     <div className="p-4 space-y-4">
