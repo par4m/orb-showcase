@@ -83,6 +83,17 @@ export default function RepositoryDetailPage() {
     queryKey: ["repository-contributors", id],
     queryFn: async () => {
       const res = await fetch(`${API_URL}/repositories/${id}/contributors`);
+      if (res.status === 404) {
+        // Fallback: fetch from GitHub API directly
+        if (displayRepo && displayRepo.full_name && displayRepo.full_name.includes("/")) {
+          const [owner, repoName] = displayRepo.full_name.split("/");
+          const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contributors`);
+          if (!ghRes.ok) throw new Error("Failed to fetch contributors from GitHub");
+          return ghRes.json();
+        } else {
+          throw new Error("Repository not found");
+        }
+      }
       if (!res.ok) throw new Error("Failed to fetch contributors");
       return res.json();
     },
