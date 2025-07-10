@@ -32,6 +32,7 @@ export interface Repository {
   homepage?: string;
   readme?: string;
   default_branch?: string;
+  topic_area_ai?: string;
 }
 
 interface Props {
@@ -176,13 +177,21 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                         <span className="font-medium">University:</span>
                         <span className="text-md">{getUniversityDisplayName(repo.university) || "-"}</span>
                       </div>
+                      {repo.topic_area_ai && (
+                        <div className="flex items-center gap-2">
+                           <span className="font-medium">Topic Area</span>
+                          <Badge variant="secondary" className="text-sm bg-purple-100 text-purple-800 border-purple-200">
+                            {repo.topic_area_ai}
+                          </Badge>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <ExternalLink className="w-4 h-4 text-gray-500" />
                         <span className="font-medium">External Links:</span>
                         <span className="flex flex-col gap-1">
               
                           {orgInfo?.blog && orgInfo.blog !== "" && (
-                            <a href={orgInfo.blog} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline">Blog</a>
+                            <a href={orgInfo.blog} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline">Website</a>
                           )}
                         </span>
                       </div>
@@ -248,7 +257,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sky-700">Contributors - {repo.contributors}</CardTitle>
+                  <CardTitle className="text-sky-700">Contributors - {contributors?.length}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ContributorsScrollArea contributors={contributors || []} />

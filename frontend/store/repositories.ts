@@ -16,6 +16,7 @@ export interface Repository {
   created_at?: string;
   contributors?: number;
   homepage?: string;
+  topic_area_ai?: string;
 }
 
 interface RepositoriesState {
@@ -32,6 +33,8 @@ interface RepositoriesState {
   setLicensesSelected: (v: string[]) => void;
   ownersSelected: string[];
   setOwnersSelected: (v: string[]) => void;
+  topicsSelected: string[];
+  setTopicsSelected: (v: string[]) => void;
 }
 
 export const useRepositoriesStore = create<RepositoriesState>((set) => ({
@@ -48,4 +51,6 @@ export const useRepositoriesStore = create<RepositoriesState>((set) => ({
   setLicensesSelected: (v) => set({ licensesSelected: v }),
   ownersSelected: [],
   setOwnersSelected: (v) => set({ ownersSelected: v }),
+  topicsSelected: [],
+  setTopicsSelected: (v) => set({ topicsSelected: v }),
 }));
