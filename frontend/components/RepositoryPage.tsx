@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -9,8 +9,10 @@ import { getUniversityDisplayName } from "@/lib/universities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User, University, School } from "lucide-react";
 import Link from "next/link";
+import { ContributorsScrollArea } from "@/components/ContributorsScrollArea";
 
 export interface Repository {
   id: number;
@@ -30,6 +32,7 @@ export interface Repository {
   homepage?: string;
   readme?: string;
   default_branch?: string;
+  topic_area_ai?: string;
 }
 
 interface Props {
@@ -39,23 +42,24 @@ interface Props {
 }
 
 interface ReadmeViewerProps {
-  source: string;
+  source?: string | null;
   repoOwner: string;
   repoName: string;
   branch?: string;
 }
 
 function fixImageUrls(markdown: string, repoOwner: string, repoName: string, branch?: string ) {
+  const safeBranch = branch || "main";
   // Replace markdown image syntax ![alt](relative.png)
   let result = markdown.replace(/!\[([^\]]*)\]\(((?!https?:\/\/)[^\)]+)\)/g, (match, alt, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `![${alt}](${url})`;
   });
   // Replace HTML <img src="relative.png"> (quoted src)
   result = result.replace(/<img([^>]+)src=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, ""); // remove leading ./ or /
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `<img${before}src="${url}"`;
   });
   // Replace HTML <img src=relative.png> (unquoted src)
@@ -63,20 +67,20 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
     // Only rewrite if not an absolute URL
     if (/^(https?:)?\//.test(relPath)) return match;
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `<img${before}src="${url}"${after}`;
   });
   // Replace HTML <source srcset="relative.png"> (quoted srcset)
   result = result.replace(/<source([^>]+)srcset=["'](?!https?:\/\/)([^"'>]+)["']/g, (match, before, relPath) => {
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `<source${before}srcset="${url}"`;
   });
   // Replace HTML <source srcset=relative.png> (unquoted srcset)
   result = result.replace(/<source([^>]+)srcset=(?!["'])([^\s>]+)([\s>])/g, (match, before, relPath, after) => {
     if (/^(https?:)?\//.test(relPath)) return match;
     const cleanPath = relPath.replace(/^\.?\//, "");
-    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${branch}/${cleanPath}`;
+    const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/refs/heads/${safeBranch}/${cleanPath}`;
     return `<source${before}srcset="${url}"${after}`;
   });
   // Also fix github.com/blob URLs as before
@@ -87,12 +91,29 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
   return result;
 }
 
+function ReadmeViewer({ source, repoOwner, repoName, branch }: ReadmeViewerProps) {
+  const [readme, setReadme] = useState<string | null>(source || null);
 
-function ReadmeViewer({ source, repoOwner, repoName, branch  }: ReadmeViewerProps) {
+  useEffect(() => {
+    if (!readme && repoOwner && repoName && branch) {
+      // Try to fetch README.md from GitHub
+      const url = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/README.md`;
+      fetch(url)
+        .then(res => res.ok ? res.text() : null)
+        .then(text => {
+          if (text) setReadme(text);
+        });
+    }
+  }, [readme, repoOwner, repoName, branch]);
+
+  if (!readme) {
+    return <div className="markdown-body p-4 text-gray-400">No README found.</div>;
+  }
+
   return (
     <div className="markdown-body p-4">
       <ReactMarkdown
-        children={fixImageUrls(source, repoOwner, repoName, branch)}
+        children={fixImageUrls(readme, repoOwner, repoName, branch)}
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeHighlight]}
       />
@@ -100,27 +121,98 @@ function ReadmeViewer({ source, repoOwner, repoName, branch  }: ReadmeViewerProp
   );
 }
 
+function useOrgInfo(org: string | undefined) {
+  const [orgInfo, setOrgInfo] = useState<{ blog?: string; html_url?: string } | null>(null);
+  useEffect(() => {
+    if (!org) return;
+    fetch(`https://api.github.com/orgs/${org}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) setOrgInfo({ blog: data.blog, html_url: data.html_url });
+      });
+  }, [org]);
+  return orgInfo;
+}
 
 export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
-  // Default branch can be improved if available from repo data
   const branch = repo.default_branch || "main";
+  const orgInfo = useOrgInfo(repo.owner);
 
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-10">
         <div className="container max-w-6xl">
-          
           <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
             <div className="space-y-6">
               <div>
                 <h1 className="text-3xl font-bold text-sky-800 mb-2">{repo.full_name}</h1>
                 <p className="text-lg text-gray-600 mb-4">{repo.description}</p>
-                <div className="flex flex-wrap gap-2 mb-6">
+                {repo.topic_area_ai && (
+                        <div className="flex items-center gap-2">
+                           
+                          <Badge variant="secondary" className="text-sm bg-purple-100 text-purple-800 border-purple-200">
+                            {repo.topic_area_ai}
+                          </Badge>
+                        </div>
+                      )}
+                {/* <div className="flex flex-wrap gap-2 mb-6">
                   {repo.language && <Badge variant="outline" className="text-sm">{repo.language}</Badge>}
                   {repo.license && <Badge variant="secondary" className="text-sm">{repo.license}</Badge>}
                   {repo.university && <Badge variant="secondary" className="text-sm">{getUniversityDisplayName(repo.university)}</Badge>}
-                </div>
-                <div className="flex gap-4 mb-8">
+                </div> */}
+              
+              </div>
+              <Card>
+                <Tabs defaultValue="overview" className="w-full">
+                  <TabsList className="w-full flex border-b border-gray-200 p-0 gap-0 bg-white">
+                    <TabsTrigger value="overview" className="flex-1 h-10 m-0 rounded-none bg-transparent data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-b-2 data-[state=active]:border-sky-700 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">Overview</TabsTrigger>
+                    <TabsTrigger value="readme" className="flex-1 h-10 m-0 rounded-none bg-transparent data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-b-2 data-[state=active]:border-sky-700 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">README</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="overview">
+                    <div className="p-4 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">Development Team:</span>
+                        <a href={orgInfo?.html_url} target="_blank" rel="noopener noreferrer" className="text-sky-600">{repo.owner} </a>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Code className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">License:</span>
+                        <span className="text-md">{repo.license || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <School className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">University:</span>
+                        <span className="text-md">{getUniversityDisplayName(repo.university) || "-"}</span>
+                      </div>
+                  
+                      <div className="flex items-center gap-2">
+                        <ExternalLink className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">External Links:</span>
+                        <span className="flex flex-col gap-1">
+              
+                          {orgInfo?.blog && orgInfo.blog !== "" && (
+                            <a href={orgInfo.blog} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline">Website</a>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="readme">
+                    <div className="max-w-4xl w-full overflow-x-auto">
+                      <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </Card>
+            </div>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sky-700">Repository Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex gap-4 mb-4">
                   <div className="flex items-center gap-1 text-gray-600">
                     <Star className="w-4 h-4" />
                     <span>{repo.stargazers_count} stars</span>
@@ -134,48 +226,18 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                     <span>{repo.subscribers_count} views</span>
                   </div>
                 </div>
-              </div>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sky-700">Description</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p>{repo.description}</p>
-                </CardContent>
-              </Card>
-              {repo.readme && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sky-700">README</CardTitle>
-                  </CardHeader>
-                  <div className="max-w-4xl w-full overflow-x-auto">
-                    <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={repo.default_branch} />
-                  </div>
-                </Card>
-              )}
-            </div>
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sky-700">Repository Info</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {repo.owner && (
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">{repo.owner}</span>
-                    </div>
-                  )}
                   {repo.created_at && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">Created {repo.created_at.split("T")[0]}</span>
+                       <span className="text-sm truncate break-all max-w-xs">
+                         Created {repo.created_at ? repo.created_at.split(/[ T]/)[0] : ""}
+                       </span>
                     </div>
                   )}
-                  {repo.license && (
+                  {repo.language && (
                     <div className="flex items-center gap-2">
                       <Code className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">{repo.license}</span>
+                      <span className="text-sm">{repo.language}</span>
                     </div>
                   )}
                   {repo.homepage && (
@@ -198,24 +260,10 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sky-700">Contributors - {repo.contributors}</CardTitle>
+                  <CardTitle className="text-sky-700">Contributors - {contributors?.length}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {contributors && contributors.length > 0 ? (
-                  <ul className="text-xs text-gray-700 pt-2 space-y-1">
-                    {contributors.slice(0, 5).map((name, idx) => (
-                      <li key={name + idx} className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <span>{name}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                      ) : (
-                      <p className="text-xs text-gray-500 pt-2">No contributors found.</p>
-                      )}
-                  </div>
+                  <ContributorsScrollArea contributors={contributors || []} />
                 </CardContent>
               </Card>
             </div>

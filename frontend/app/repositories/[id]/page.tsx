@@ -24,6 +24,7 @@ type Repository = {
   pushed_at?: string;
   readme?: string;
   default_branch?: string;
+  topic_area_ai?: string;
   // add other fields as needed
 };
 
