@@ -147,6 +147,14 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
               <div>
                 <h1 className="text-3xl font-bold text-sky-800 mb-2">{repo.full_name}</h1>
                 <p className="text-lg text-gray-600 mb-4">{repo.description}</p>
+                {repo.topic_area_ai && (
+                        <div className="flex items-center gap-2">
+                           
+                          <Badge variant="secondary" className="text-sm bg-purple-100 text-purple-800 border-purple-200">
+                            {repo.topic_area_ai}
+                          </Badge>
+                        </div>
+                      )}
                 {/* <div className="flex flex-wrap gap-2 mb-6">
                   {repo.language && <Badge variant="outline" className="text-sm">{repo.language}</Badge>}
                   {repo.license && <Badge variant="secondary" className="text-sm">{repo.license}</Badge>}
@@ -177,14 +185,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                         <span className="font-medium">University:</span>
                         <span className="text-md">{getUniversityDisplayName(repo.university) || "-"}</span>
                       </div>
-                      {repo.topic_area_ai && (
-                        <div className="flex items-center gap-2">
-                           <span className="font-medium">Topic Area</span>
-                          <Badge variant="secondary" className="text-sm bg-purple-100 text-purple-800 border-purple-200">
-                            {repo.topic_area_ai}
-                          </Badge>
-                        </div>
-                      )}
+                  
                       <div className="flex items-center gap-2">
                         <ExternalLink className="w-4 h-4 text-gray-500" />
                         <span className="font-medium">External Links:</span>
@@ -228,7 +229,9 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                   {repo.created_at && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">Created {repo.created_at.split("T")[0]}</span>
+                       <span className="text-sm truncate break-all max-w-xs">
+                         Created {repo.created_at ? repo.created_at.split(/[ T]/)[0] : ""}
+                       </span>
                     </div>
                   )}
                   {repo.language && (

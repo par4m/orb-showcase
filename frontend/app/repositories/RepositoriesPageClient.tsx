@@ -149,20 +149,22 @@ export function RepositoriesPageClient() {
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-            <h1 className="text-3xl font-bold text-sky-800">Browse Repositories</h1>
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="text-gray-600 text-sm">Show</span>
-              <select
-                className="w-[70px] h-8 text-sm border-gray-300 rounded-md border focus:outline-none focus:ring-amber-400a text-center"
-                value={pageSize}
-                onChange={e => setPageSize(Number(e.target.value))}
-              >
-                {[10, 20, 30, 40].map(n => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-              <span className="text-gray-600 text-sm">per page</span>
-              <span className="ml-4 text-gray-500 text-xs">{totalItems} repositories</span>
+            <h1 className="text-3xl font-bold text-sky-800 flex-1 truncate">Browse Repositories</h1>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+         
+              <div className="flex items-center gap-2 md:ml-auto md:order-2 order-1">
+                <span className="text-gray-600 text-sm">Show</span>
+                <select
+                  className="w-[70px] h-8 text-sm border-gray-300 rounded-md border focus:outline-none focus:ring-amber-400a text-center"
+                  value={pageSize}
+                  onChange={e => setPageSize(Number(e.target.value))}
+                >
+                  {[10, 20, 30, 40].map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+                <span className="text-gray-600 text-sm">per page</span>
+              </div>
             </div>
           </div>
           <div className="grid gap-6 md:grid-cols-[250px_1fr] w-full">
@@ -197,7 +199,12 @@ export function RepositoriesPageClient() {
               ) : pagedRepositories.length === 0 ? (
                 <RepositoryEmptyState />
               ) : (
-                <RepositoryGrid repositories={pagedRepositories} />
+                <>
+                  <span className="font-bold text-sky-800 text-sm block mb-2">
+                    Showing {pagedRepositories.length} of {totalItems} projects
+                  </span>
+                  <RepositoryGrid repositories={pagedRepositories} />
+                </>
               )}
               <RepositoryPagination
                 page={page}
