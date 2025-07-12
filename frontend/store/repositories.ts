@@ -17,6 +17,15 @@ export interface Repository {
   contributors?: number;
   homepage?: string;
   topic_area_ai?: string;
+  // Only these extra fields
+  funder1?: string;
+  grant_number1_1?: string;
+  grant_number1_2?: string;
+  grant_number1_3?: string;
+  funder2?: string;
+  grant_number2_1?: string;
+  grant_number2_2?: string;
+  grant_number2_3?: string;
 }
 
 interface RepositoriesState {

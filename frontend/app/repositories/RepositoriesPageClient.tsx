@@ -28,6 +28,14 @@ type Repository = {
   default_branch?: string;
   topic_area_ai?: string;
   university?: string;
+  funder1?: string;
+  grant_number1_1?: string;
+  grant_number1_2?: string;
+  grant_number1_3?: string;
+  funder2?: string;
+  grant_number2_1?: string;
+  grant_number2_2?: string;
+  grant_number2_3?: string;
   // add other fields as needed
 };
 

@@ -23,6 +23,21 @@ class Repository(SQLModel, table=True):
     default_branch: str | None
     approved: bool | None
     topic_area_ai: str | None
+    # Added missing fields
+    contact_name: str | None
+    contact_email: str | None
+    contact_name2: str | None
+    contact_email2: str | None
+    contact_name3: str | None
+    contact_email3: str | None
+    funder1: str | None
+    grant_number1_1: str | None
+    grant_number1_2: str | None
+    grant_number1_3: str | None
+    funder2: str | None
+    grant_number2_1: str | None
+    grant_number2_2: str | None
+    grant_number2_3: str | None
 
 
 class RepositoryResponse(BaseModel):
@@ -43,3 +58,13 @@ class RepositoryResponse(BaseModel):
     homepage: str | None
     default_branch: str | None
     topic_area_ai: str | None
+    # Added missing fields
+
+    funder1: str | None
+    grant_number1_1: str | None
+    grant_number1_2: str | None
+    grant_number1_3: str | None
+    funder2: str | None
+    grant_number2_1: str | None
+    grant_number2_2: str | None
+    grant_number2_3: str | None

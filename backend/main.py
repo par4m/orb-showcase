@@ -203,31 +203,3 @@ def get_organizations(session: Session = Depends(get_session)):
     return sorted([owner for owner in result if owner])
 
 
-@app.get("/repositories/{id}/contributors", response_model=List[str])
-def get_contributors(id: str, session: Session = Depends(get_session)):
-    """
-    ### Get Contributors
-    Retrieves a list of unique contributors for a specific repository.
-    
-    **Parameters:**
-        - `id` (int): The unique identifier of the repository.
-
-    **Returns:**
-        - `List[str]`: List of unique contributors.
-    """
-    id = str(id)
-    repo = session.exec(
-        select(Repository).where(Repository.id == id, Repository.approved == True)
-    ).first()
-    if not repo:
-        raise HTTPException(status_code=404, detail="Repository not found")
-    if not repo.full_name or "/" not in repo.full_name:
-        raise HTTPException(status_code=400, detail="Invalid repository full_name")
-    owner, repo_name = repo.full_name.split("/", 1)
-    url = f"https://api.github.com/repos/{owner}/{repo_name}/contributors"
-    response = httpx.get(url)
-    if response.status_code != 200:
-        raise HTTPException(status_code=502, detail="Failed to fetch contributors from GitHub")
-    contributors = [c["login"] for c in response.json() if "login" in c]
-    return contributors
-    
