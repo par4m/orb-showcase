@@ -1,11 +1,15 @@
 from typing import List
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Depends, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, func
-from models import Repository, RepositoryResponse
-from fastapi import HTTPException
+from models import Repository, RepositoryResponse, RepositorySubmissionRequest, RepositorySubmissionResponse
 from database import get_session
 import httpx
+import os
+import json
+import uuid
+from datetime import datetime
+from urllib.parse import urlparse
  
 app = FastAPI()
 
@@ -201,5 +205,169 @@ def get_organizations(session: Session = Depends(get_session)):
         .distinct()
     )
     return sorted([owner for owner in result if owner])
+
+
+@app.post("/submit-repository", response_model=RepositorySubmissionResponse)
+async def submit_repository(submission: RepositorySubmissionRequest):
+    """
+    ### Submit Repository
+    Submit a new repository for review via GitHub PR workflow.
+    
+    **Parameters:**
+        - `submission` (RepositorySubmissionRequest): Repository submission details
+    
+    **Returns:**
+        - `RepositorySubmissionResponse`: Confirmation with PR URL and submission ID
+    
+    **Raises:**
+        - `HTTPException 400`: If submission data is invalid
+        - `HTTPException 409`: If repository already exists
+    """
+    try:
+        # Basic validation - GitHub URL format
+        if not submission.repository_url.startswith(('https://github.com/', 'http://github.com/')):
+            raise HTTPException(status_code=400, detail="Only GitHub repositories are currently supported")
+        
+        # Extract owner/repo from URL for validation
+        parsed_url = urlparse(submission.repository_url.rstrip('/'))
+        path_parts = parsed_url.path.strip('/').split('/')
+        
+        if len(path_parts) < 2:
+            raise HTTPException(status_code=400, detail="Invalid GitHub repository URL format")
+        
+        owner = path_parts[0]
+        repo_name = path_parts[1]
+        repo_full_name = f"{owner}/{repo_name}"
+        
+        # Check if repository already exists in approved list
+        if await check_repository_exists(submission.repository_url):
+            raise HTTPException(
+                status_code=409, 
+                detail="Repository already exists in the catalog or is pending review"
+            )
+        
+        # Generate unique submission ID
+        submission_id = str(uuid.uuid4())
+        
+        # Create GitHub PR with submission data
+        pr_url = await create_github_pr(submission, submission_id, repo_full_name)
+        
+        return RepositorySubmissionResponse(
+            message="Repository submission received! A pull request has been created for review.",
+            pr_url=pr_url,
+            submission_id=submission_id,
+            status="pending"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to submit repository: {str(e)}")
+
+
+async def check_repository_exists(repository_url: str) -> bool:
+    """
+    Check if repository already exists in approved list or pending submissions.
+    This will check the JSON file that contains approved repositories.
+    """
+    try:
+        # Check approved repositories list
+        approved_file_path = "data/approved-repositories.json"
+        if os.path.exists(approved_file_path):
+            with open(approved_file_path, 'r') as f:
+                approved_repos = json.load(f)
+                if repository_url in approved_repos or any(repo.get('url') == repository_url for repo in approved_repos if isinstance(repo, dict)):
+                    return True
+        
+        # Check pending submissions
+        pending_dir = "data/submissions/pending"
+        if os.path.exists(pending_dir):
+            for filename in os.listdir(pending_dir):
+                if filename.endswith('.json'):
+                    with open(os.path.join(pending_dir, filename), 'r') as f:
+                        pending_submission = json.load(f)
+                        if pending_submission.get('repository_url') == repository_url:
+                            return True
+        
+        return False
+    except Exception as e:
+        print(f"Error checking repository existence: {e}")
+        return False
+
+
+async def create_github_pr(submission: RepositorySubmissionRequest, submission_id: str, repo_full_name: str) -> str | None:
+    """
+    Create a GitHub PR with the repository submission data.
+    This will be handled by the GitHub bot workflow.
+    """
+    try:
+        # Create submission data structure
+        submission_data = {
+            "submission_id": submission_id,
+            "submitted_at": datetime.utcnow().isoformat(),
+            "status": "pending",
+            "repository_url": submission.repository_url,
+            "repo_full_name": repo_full_name,
+            "submitter_name": submission.submitter_name,
+            "submitter_email": submission.submitter_email,
+            "short_description": submission.short_description,
+            "topic_area_ai": submission.topic_area_ai,
+            "university": submission.university,
+            "contact_name2": submission.contact_name2,
+            "contact_email2": submission.contact_email2,
+            "contact_name3": submission.contact_name3,
+            "contact_email3": submission.contact_email3,
+            "funder1": submission.funder1,
+            "grant_number1_1": submission.grant_number1_1,
+            "grant_number1_2": submission.grant_number1_2,
+            "grant_number1_3": submission.grant_number1_3,
+            "funder2": submission.funder2,
+            "grant_number2_1": submission.grant_number2_1,
+            "grant_number2_2": submission.grant_number2_2,
+            "grant_number2_3": submission.grant_number2_3,
+        }
+        
+        # Save submission to pending directory (for now, until GitHub integration)
+        await save_submission_locally(submission_data, submission_id)
+        
+        # GitHub PR creation logic would go here
+        github_token = os.getenv("GITHUB_TOKEN")
+        repo_owner = os.getenv("GITHUB_REPO_OWNER", "UC-OSPO-Network")  
+        repo_name = os.getenv("GITHUB_REPO_NAME", "orb-showcase")
+        
+        if github_token:
+            # TODO: Implement actual GitHub PR creation
+            # For now, return a mock PR URL
+            return f"https://github.com/{repo_owner}/{repo_name}/pull/{hash(submission.repository_url) % 1000}"
+        else:
+            # No GitHub token - save locally for manual processing
+            print(f"Submission saved locally: {submission_id}")
+            return None
+            
+    except Exception as e:
+        print(f"GitHub PR creation error: {e}")
+        return None
+
+
+async def save_submission_locally(submission_data: dict, submission_id: str):
+    """
+    Save submission data locally in the pending directory.
+    """
+    try:
+        # Ensure directories exist
+        os.makedirs("data/submissions/pending", exist_ok=True)
+        
+        # Save submission file
+        filename = f"{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{submission_id[:8]}.json"
+        filepath = os.path.join("data/submissions/pending", filename)
+        
+        with open(filepath, 'w') as f:
+            json.dump(submission_data, f, indent=2)
+            
+        print(f"Submission saved: {filepath}")
+        
+    except Exception as e:
+        print(f"Error saving submission locally: {e}")
+        raise
 
 

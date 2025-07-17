@@ -144,55 +144,14 @@ export default function ConnectPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-row min-h-screen">
       <main className="flex-1 py-10">
         <div className="container">
           <h1 className="text-3xl font-bold mb-8 text-sky-800">Connect With Us</h1>
 
-          <div className="grid gap-8 lg:grid-cols-3">
+         
             {/* Contact Information */}
-            <div>
-              <Card className="border shadow-sm h-full">
-                <CardHeader>
-                  <CardTitle className="text-sky-700">Contact Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h3 className="font-medium text-gray-900">Email</h3>
-                    <p className="text-gray-600">
-                      <a href="mailto:info@opensourcehub.example" className="text-sky-600 hover:underline">
-                        info@opensourcehub.example
-                      </a>
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-medium text-gray-900">Main Website</h3>
-                    <p className="text-gray-600">
-                      <a
-                        href="https://www.example.org"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sky-600 hover:underline"
-                      >
-                        www.example.org
-                      </a>
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-medium text-gray-900">Address</h3>
-                    <p className="text-gray-600">
-                      123 Open Source Way
-                      <br />
-                      San Francisco, CA 94105
-                      <br />
-                      United States
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            
 
             {/* Repository Submission Form */}
             <div className="lg:col-span-2">
@@ -493,7 +452,7 @@ export default function ConnectPage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
+       
         </div>
       </main>
     </div>
