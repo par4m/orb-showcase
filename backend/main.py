@@ -8,6 +8,7 @@ import httpx
 import os
 import json
 import uuid
+import base64
 from datetime import datetime
 from urllib.parse import urlparse
  
@@ -298,7 +299,6 @@ async def check_repository_exists(repository_url: str) -> bool:
 async def create_github_pr(submission: RepositorySubmissionRequest, submission_id: str, repo_full_name: str) -> str | None:
     """
     Create a GitHub PR with the repository submission data.
-    This will be handled by the GitHub bot workflow.
     """
     try:
         # Create submission data structure
@@ -327,18 +327,18 @@ async def create_github_pr(submission: RepositorySubmissionRequest, submission_i
             "grant_number2_3": submission.grant_number2_3,
         }
         
-        # Save submission to pending directory (for now, until GitHub integration)
+        # Save submission to pending directory
         await save_submission_locally(submission_data, submission_id)
         
-        # GitHub PR creation logic would go here
+        # GitHub PR creation
         github_token = os.getenv("GITHUB_TOKEN")
         repo_owner = os.getenv("GITHUB_REPO_OWNER", "UC-OSPO-Network")  
         repo_name = os.getenv("GITHUB_REPO_NAME", "orb-showcase")
         
         if github_token:
-            # TODO: Implement actual GitHub PR creation
-            # For now, return a mock PR URL
-            return f"https://github.com/{repo_owner}/{repo_name}/pull/{hash(submission.repository_url) % 1000}"
+            return await create_actual_github_pr(
+                submission_data, submission_id, repo_owner, repo_name, github_token
+            )
         else:
             # No GitHub token - save locally for manual processing
             print(f"Submission saved locally: {submission_id}")
@@ -347,6 +347,193 @@ async def create_github_pr(submission: RepositorySubmissionRequest, submission_i
     except Exception as e:
         print(f"GitHub PR creation error: {e}")
         return None
+
+
+async def create_actual_github_pr(
+    submission_data: dict, 
+    submission_id: str, 
+    repo_owner: str, 
+    repo_name: str, 
+    github_token: str
+) -> str | None:
+    """
+    Create actual GitHub PR using GitHub API
+    """
+    try:
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "UC-ORB-Showcase-Bot"
+        }
+        
+        base_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
+        
+        # Create branch name
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        branch_name = f"add-repo-{submission_data['repo_full_name'].replace('/', '-')}-{timestamp}"
+        
+        async with httpx.AsyncClient() as client:
+            # 1. Get the default branch SHA
+            main_branch_response = await client.get(
+                f"{base_url}/git/refs/heads/main",
+                headers=headers
+            )
+            
+            if main_branch_response.status_code != 200:
+                print(f"Failed to get main branch: {main_branch_response.text}")
+                return None
+            
+            main_sha = main_branch_response.json()["object"]["sha"]
+            
+            # 2. Create new branch
+            create_branch_response = await client.post(
+                f"{base_url}/git/refs",
+                headers=headers,
+                json={
+                    "ref": f"refs/heads/{branch_name}",
+                    "sha": main_sha
+                }
+            )
+            
+            if create_branch_response.status_code != 201:
+                print(f"Failed to create branch: {create_branch_response.text}")
+                return None
+            
+            # 3. Create submission file content
+            filename = f"{timestamp}_{submission_id[:8]}.json"
+            file_path = f"data/submissions/pending/{filename}"
+            file_content = json.dumps(submission_data, indent=2)
+            
+            # 4. Create/update file in the new branch
+            create_file_response = await client.put(
+                f"{base_url}/contents/{file_path}",
+                headers=headers,
+                json={
+                    "message": f"Add repository submission: {submission_data['repo_full_name']}",
+                    "content": base64.b64encode(file_content.encode()).decode(),
+                    "branch": branch_name
+                }
+            )
+            
+            if create_file_response.status_code not in [200, 201]:
+                print(f"Failed to create file: {create_file_response.text}")
+                return None
+            
+            # 5. Create pull request
+            pr_title = f"Add repository: {submission_data['repo_full_name']}"
+            pr_body = create_pr_description(submission_data)
+            
+            create_pr_response = await client.post(
+                f"{base_url}/pulls",
+                headers=headers,
+                json={
+                    "title": pr_title,
+                    "head": branch_name,
+                    "base": "main",
+                    "body": pr_body
+                }
+            )
+            
+            if create_pr_response.status_code != 201:
+                print(f"Failed to create PR: {create_pr_response.text}")
+                return None
+            
+            pr_data = create_pr_response.json()
+            pr_url = pr_data["html_url"]
+            
+            # 6. Add labels to PR
+            await client.post(
+                f"{base_url}/issues/{pr_data['number']}/labels",
+                headers=headers,
+                json=["repository-submission", "needs-review"]
+            )
+            
+            print(f"Successfully created PR: {pr_url}")
+            return pr_url
+            
+    except Exception as e:
+        print(f"Error creating GitHub PR: {e}")
+        return None
+
+
+def create_pr_description(submission_data: dict) -> str:
+    """
+    Create a formatted PR description from submission data
+    """
+    description = f"""# Repository Submission
+
+## Repository Information
+- **Repository URL**: {submission_data['repository_url']}
+- **Repository Name**: {submission_data['repo_full_name']}
+- **Topic Area**: {submission_data['topic_area_ai']}
+- **Description**: {submission_data['short_description']}
+
+## Submitter Information
+- **Name**: {submission_data['submitter_name']}
+- **Email**: {submission_data['submitter_email']}
+"""
+
+    if submission_data.get('university'):
+        description += f"- **University**: {submission_data['university']}\n"
+
+    # Additional contacts
+    if submission_data.get('contact_name2'):
+        description += f"\n## Additional Contacts\n"
+        description += f"- **Contact 2**: {submission_data['contact_name2']} ({submission_data.get('contact_email2', 'N/A')})\n"
+    
+    if submission_data.get('contact_name3'):
+        if not submission_data.get('contact_name2'):
+            description += f"\n## Additional Contacts\n"
+        description += f"- **Contact 3**: {submission_data['contact_name3']} ({submission_data.get('contact_email3', 'N/A')})\n"
+
+    # Funding information
+    funding_info = []
+    if submission_data.get('funder1'):
+        grants = [g for g in [
+            submission_data.get('grant_number1_1'),
+            submission_data.get('grant_number1_2'),
+            submission_data.get('grant_number1_3')
+        ] if g]
+        grant_text = f" (Grants: {', '.join(grants)})" if grants else ""
+        funding_info.append(f"- **Primary Funder**: {submission_data['funder1']}{grant_text}")
+    
+    if submission_data.get('funder2'):
+        grants = [g for g in [
+            submission_data.get('grant_number2_1'),
+            submission_data.get('grant_number2_2'),
+            submission_data.get('grant_number2_3')
+        ] if g]
+        grant_text = f" (Grants: {', '.join(grants)})" if grants else ""
+        funding_info.append(f"- **Secondary Funder**: {submission_data['funder2']}{grant_text}")
+    
+    if funding_info:
+        description += f"\n## Funding Information\n" + "\n".join(funding_info) + "\n"
+
+    description += f"""
+## Submission Details
+- **Submission ID**: {submission_data['submission_id']}
+- **Submitted At**: {submission_data['submitted_at']}
+- **Status**: {submission_data['status']}
+
+## Review Checklist
+- [ ] Repository exists and is accessible
+- [ ] Repository is not a duplicate
+- [ ] Repository has appropriate license
+- [ ] Repository has README documentation
+- [ ] Submission information is accurate
+- [ ] Repository fits UC ORB Showcase criteria
+
+## Next Steps
+1. Review the repository and submission details
+2. Verify the repository meets inclusion criteria
+3. Approve or request changes
+4. Merge this PR to add the repository to the showcase
+
+---
+*This PR was automatically created by the UC ORB Showcase submission system.*
+"""
+    
+    return description
 
 
 async def save_submission_locally(submission_data: dict, submission_id: str):
