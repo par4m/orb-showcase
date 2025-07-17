@@ -37,9 +37,20 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep 'data/submissions/pending/' || echo "")
+          echo "Base SHA: ${{ github.event.pull_request.base.sha }}"
+          echo "Head SHA: ${{ github.event.pull_request.head.sha }}"
+          
+          all_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          echo "All changed files:"
+          echo "$all_files"
+          
+          files=$(echo "$all_files" | grep 'data/submissions/pending/' || echo "")
           echo "files=$files" >> $GITHUB_OUTPUT
-          echo "Found files: $files"
+          echo "Submission files found: $files"
+          
+          if [ -z "$files" ]; then
+            echo "No submission files found in this PR"
+          fi
 
       - name: Validate submission files
         if: steps.changed-files.outputs.files != ''
@@ -57,6 +68,7 @@ jobs:
           python .github/scripts/validate_github_repo.py "${{ steps.changed-files.outputs.files }}"
 
       - name: Comment validation results
+        if: steps.changed-files.outputs.files != ''
         uses: actions/github-script@v7
         with:
           script: |
@@ -74,6 +86,22 @@ jobs:
               comment += '- Ready for maintainer review\n';
               comment += '- Approve this PR to add the repository to the showcase\n';
             }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Comment no submission files
+        if: steps.changed-files.outputs.files == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = '## 🤖 No Repository Submissions Found\n\n' +
+              'This PR does not contain any repository submission files in `data/submissions/pending/`.\n\n' +
+              'If you intended to submit a repository, please ensure your submission file is placed in the correct directory.';
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
