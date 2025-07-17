@@ -41,7 +41,7 @@ def move_submission_file(file_path, destination):
                 submission_data = json.load(f)
             
             submission_data['status'] = destination
-            submission_data['processed_at'] = str(datetime.utcnow().isoformat())
+            submission_data['processed_at'] = str(datetime.now(timezone.utc).isoformat())
             
             with open(dest_path, 'w') as f:
                 json.dump(submission_data, f, indent=2)
@@ -77,5 +77,5 @@ def main():
             move_submission_file(file_path.strip(), destination)
 
 if __name__ == "__main__":
-    from datetime import datetime
+    from datetime import datetime, timezone
     main()

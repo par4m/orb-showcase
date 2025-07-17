@@ -15,10 +15,17 @@ def validate_github_repository(file_path):
     
     try:
         # Load submission file
+        print(f"DEBUG: Loading file: {file_path}")
         with open(file_path) as f:
             submission = json.load(f)
         
+        print(f"DEBUG: Submission data keys: {list(submission.keys())}")
         repo_url = submission.get('repository_url', '')
+        print(f"DEBUG: Repository URL: {repo_url}")
+        
+        if not repo_url:
+            results.append(f"❌ {file_path}: No repository URL found in submission")
+            return results
         
         # Parse GitHub URL
         parsed = urlparse(repo_url)
@@ -33,6 +40,7 @@ def validate_github_repository(file_path):
         
         owner = path_parts[0]
         repo = path_parts[1]
+        print(f"DEBUG: Owner: {owner}, Repo: {repo}")
         
         # Check repository via GitHub API
         api_url = f"https://api.github.com/repos/{owner}/{repo}"
@@ -50,41 +58,58 @@ def validate_github_repository(file_path):
             return results
         elif response.status_code == 403:
             results.append(f"⚠️ {file_path}: Rate limited or private repository: {repo_url}")
-            # Don't fail on rate limits, just warn
+            results.append(f"ℹ️ {file_path}: Skipping detailed validation due to rate limit")
+            return results
         elif response.status_code != 200:
             results.append(f"⚠️ {file_path}: Could not verify repository (HTTP {response.status_code}): {repo_url}")
-            # Don't fail on API issues, just warn
-        else:
+            results.append(f"ℹ️ {file_path}: Skipping detailed validation due to API error")
+            return results
+        
+        # Only proceed if we got a successful response
+        try:
             repo_data = response.json()
-            
-            # Check if repository is public
-            if repo_data.get('private', True):
-                results.append(f"❌ {file_path}: Repository is private: {repo_url}")
-                return results
-            
-            # Check if repository is archived
-            if repo_data.get('archived', False):
-                results.append(f"⚠️ {file_path}: Repository is archived: {repo_url}")
-            
-            # Check if repository is a fork (optional warning)
-            if repo_data.get('fork', False):
-                results.append(f"⚠️ {file_path}: Repository is a fork: {repo_url}")
-            
-            # Validate repository has description
-            if not repo_data.get('description'):
-                results.append(f"⚠️ {file_path}: Repository has no description")
-            
-            # Check for README
+        except Exception as e:
+            results.append(f"❌ {file_path}: Invalid JSON response from GitHub API: {e}")
+            return results
+        
+        # Check if repository is public
+        if repo_data.get('private', True):
+            results.append(f"❌ {file_path}: Repository is private: {repo_url}")
+            return results
+        
+        # Check if repository is archived
+        if repo_data.get('archived', False):
+            results.append(f"⚠️ {file_path}: Repository is archived: {repo_url}")
+        
+        # Check if repository is a fork (optional warning)
+        if repo_data.get('fork', False):
+            results.append(f"⚠️ {file_path}: Repository is a fork: {repo_url}")
+        
+        # Validate repository has description
+        if not repo_data.get('description'):
+            results.append(f"⚠️ {file_path}: Repository has no description")
+        
+        # Check for README
+        try:
             readme_url = f"https://api.github.com/repos/{owner}/{repo}/readme"
             readme_response = requests.get(readme_url, headers=headers, timeout=10)
             if readme_response.status_code != 200:
                 results.append(f"⚠️ {file_path}: Repository has no README file")
-            
-            results.append(f"✅ {file_path}: Repository validated successfully")
-            results.append(f"   - Stars: {repo_data.get('stargazers_count', 0)}")
-            results.append(f"   - Language: {repo_data.get('language', 'Not specified')}")
-            results.append(f"   - License: {repo_data.get('license', {}).get('name', 'Not specified')}")
-            results.append(f"   - Last updated: {repo_data.get('updated_at', 'Unknown')}")
+        except Exception:
+            results.append(f"⚠️ {file_path}: Could not check README file")
+        
+        results.append(f"✅ {file_path}: Repository validated successfully")
+        results.append(f"   - Stars: {repo_data.get('stargazers_count', 0)}")
+        results.append(f"   - Language: {repo_data.get('language', 'Not specified')}")
+        
+        # Safely handle license data
+        license_info = repo_data.get('license')
+        if license_info and isinstance(license_info, dict):
+            license_name = license_info.get('name', 'Not specified')
+        else:
+            license_name = 'Not specified'
+        results.append(f"   - License: {license_name}")
+        results.append(f"   - Last updated: {repo_data.get('updated_at', 'Unknown')}")
         
     except requests.RequestException as e:
         results.append(f"⚠️ {file_path}: Network error validating repository: {e}")
