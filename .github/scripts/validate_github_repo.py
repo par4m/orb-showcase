@@ -15,13 +15,10 @@ def validate_github_repository(file_path):
     
     try:
         # Load submission file
-        print(f"DEBUG: Loading file: {file_path}")
         with open(file_path) as f:
             submission = json.load(f)
         
-        print(f"DEBUG: Submission data keys: {list(submission.keys())}")
         repo_url = submission.get('repository_url', '')
-        print(f"DEBUG: Repository URL: {repo_url}")
         
         if not repo_url:
             results.append(f"❌ {file_path}: No repository URL found in submission")
@@ -40,7 +37,6 @@ def validate_github_repository(file_path):
         
         owner = path_parts[0]
         repo = path_parts[1]
-        print(f"DEBUG: Owner: {owner}, Repo: {repo}")
         
         # Check repository via GitHub API
         api_url = f"https://api.github.com/repos/{owner}/{repo}"

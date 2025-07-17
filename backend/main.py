@@ -327,20 +327,19 @@ async def create_github_pr(submission: RepositorySubmissionRequest, submission_i
             "grant_number2_3": submission.grant_number2_3,
         }
         
-        # Save submission to pending directory
-        await save_submission_locally(submission_data, submission_id)
-        
         # GitHub PR creation
         github_token = os.getenv("GITHUB_TOKEN")
         repo_owner = os.getenv("GITHUB_REPO_OWNER", "UC-OSPO-Network")  
         repo_name = os.getenv("GITHUB_REPO_NAME", "orb-showcase")
         
         if github_token:
+            # Create GitHub PR with submission data
             return await create_actual_github_pr(
                 submission_data, submission_id, repo_owner, repo_name, github_token
             )
         else:
             # No GitHub token - save locally for manual processing
+            await save_submission_locally(submission_data, submission_id)
             print(f"Submission saved locally: {submission_id}")
             return None
             
@@ -374,8 +373,16 @@ async def create_actual_github_pr(
         
         async with httpx.AsyncClient() as client:
             # 1. Get the default branch SHA
+            # First get repository info to find the default branch
+            repo_info_response = await client.get(f"{base_url}", headers=headers)
+            if repo_info_response.status_code != 200:
+                print(f"Failed to get repository info: {repo_info_response.text}")
+                return None
+            
+            default_branch = repo_info_response.json().get("default_branch", "main")
+            
             main_branch_response = await client.get(
-                f"{base_url}/git/refs/heads/main",
+                f"{base_url}/git/refs/heads/{default_branch}",
                 headers=headers
             )
             
@@ -429,7 +436,7 @@ async def create_actual_github_pr(
                 json={
                     "title": pr_title,
                     "head": branch_name,
-                    "base": "main",
+                    "base": default_branch,
                     "body": pr_body
                 }
             )
