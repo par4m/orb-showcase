@@ -19,7 +19,7 @@ jobs:
   validate-submission:
     name: Validate Submission
     runs-on: ubuntu-latest
-    if: (github.event.action == 'opened' || github.event.action == 'synchronize') && contains(github.event.pull_request.title, 'Add repository:')
+    if: github.event.action == 'opened' || github.event.action == 'synchronize'
     
     steps:
       - name: Checkout code
@@ -39,17 +39,22 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          echo "files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep 'data/submissions/pending/' | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep 'data/submissions/pending/' || echo "")
+          echo "files=$files" >> $GITHUB_OUTPUT
+          echo "Found files: $files"
 
       - name: Validate submission files
+        if: steps.changed-files.outputs.files != ''
         run: |
           python .github/scripts/validate_submission.py "${{ steps.changed-files.outputs.files }}"
 
       - name: Check for duplicates
+        if: steps.changed-files.outputs.files != ''
         run: |
           python .github/scripts/check_duplicates.py "${{ steps.changed-files.outputs.files }}"
 
       - name: Validate GitHub repository
+        if: steps.changed-files.outputs.files != ''
         run: |
           python .github/scripts/validate_github_repo.py "${{ steps.changed-files.outputs.files }}"
 
