@@ -80,24 +80,18 @@ export default function RepositoryDetailPage() {
     isLoading: isContributorsLoading,
     error: contributorsError
   } = useQuery<any[]>({
-    queryKey: ["repository-contributors", id],
+    queryKey: ["repository-contributors", displayRepo?.full_name],
     queryFn: async () => {
-      const res = await fetch(`${API_URL}/repositories/${id}/contributors`);
-      if (res.status === 404) {
-        // Fallback: fetch from GitHub API directly
-        if (displayRepo && displayRepo.full_name && displayRepo.full_name.includes("/")) {
-          const [owner, repoName] = displayRepo.full_name.split("/");
-          const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contributors`);
-          if (!ghRes.ok) throw new Error("Failed to fetch contributors from GitHub");
-          return ghRes.json();
-        } else {
-          throw new Error("Repository not found");
-        }
+      if (displayRepo && displayRepo.full_name && displayRepo.full_name.includes("/")) {
+        const [owner, repoName] = displayRepo.full_name.split("/");
+        const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contributors`);
+        if (!ghRes.ok) throw new Error("Failed to fetch contributors from GitHub");
+        return ghRes.json();
+      } else {
+        throw new Error("Repository full_name (owner/repo) not available");
       }
-      if (!res.ok) throw new Error("Failed to fetch contributors");
-      return res.json();
     },
-    enabled: !!id,
+    enabled: !!displayRepo && !!displayRepo.full_name && displayRepo.full_name.includes("/"),
     staleTime: 300_000,
   });
 
@@ -151,8 +145,7 @@ export default function RepositoryDetailPage() {
       </Head>
       <RepositoryPage
         repo={displayRepo}
-        contributors={Array.isArray(contributors) ? contributors : []}
-       
+        contributors={Array.isArray(contributors) ? contributors.map(c => typeof c === 'string' ? c : c.login) : []}
       />
     </>
   );

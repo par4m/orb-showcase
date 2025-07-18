@@ -33,6 +33,14 @@ export interface Repository {
   readme?: string;
   default_branch?: string;
   topic_area_ai?: string;
+  funder1?: string;
+  grant_number1_1?: string;
+  grant_number1_2?: string;
+  grant_number1_3?: string;
+  funder2?: string;
+  grant_number2_1?: string;
+  grant_number2_2?: string;
+  grant_number2_3?: string;
 }
 
 interface Props {
@@ -139,11 +147,11 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
   const orgInfo = useOrgInfo(repo.owner);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 py-10">
+    <div className="flex flex-col">
+      <main className="flex-1 py-4">
         <div className="container max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
               <div>
                 <h1 className="text-3xl font-bold text-sky-800 mb-2">{repo.full_name}</h1>
                 <p className="text-lg text-gray-600 mb-4">{repo.description}</p>
@@ -162,11 +170,11 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                 </div> */}
               
               </div>
-              <Card>
+              <Card className="w-full max-w-full min-w-0 flex-shrink-0">
                 <Tabs defaultValue="overview" className="w-full">
                   <TabsList className="w-full flex border-b border-gray-200 p-0 gap-0 bg-white">
-                    <TabsTrigger value="overview" className="flex-1 h-10 m-0 rounded-none bg-transparent data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-b-2 data-[state=active]:border-sky-700 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">Overview</TabsTrigger>
-                    <TabsTrigger value="readme" className="flex-1 h-10 m-0 rounded-none bg-transparent data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:border-b-2 data-[state=active]:border-sky-700 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">README</TabsTrigger>
+                    <TabsTrigger value="overview" className="flex-1 h-10 m-0 rounded-none bg-transparent whitespace-nowrap data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">Overview</TabsTrigger>
+                    <TabsTrigger value="readme" className="flex-1 h-10 m-0 rounded-none bg-transparent whitespace-nowrap data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">README</TabsTrigger>
                   </TabsList>
                   <TabsContent value="overview">
                     <div className="p-4 space-y-4">
@@ -196,6 +204,41 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                           )}
                         </span>
                       </div>
+                  {/* Funders and Grant Details */}
+                  {(repo.funder1 || repo.grant_number1_1 || repo.grant_number1_2 || repo.grant_number1_3 || repo.funder2 || repo.grant_number2_1 || repo.grant_number2_2 || repo.grant_number2_3) && (
+                    <div className="mt-6">
+                      <div className="bg-sky-50 border border-sky-100 rounded-lg p-4">
+                        <div className="font-semibold text-sky-800 text-base mb-2 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3 0 1.657 1.343 3 3 3s3-1.343 3-3c0-1.657-1.343-3-3-3zm0 13c-4.418 0-8-3.582-8-8 0-4.418 3.582-8 8-8s8 3.582 8 8c0 4.418-3.582 8-8 8z"/></svg>
+                          Funding & Grants
+                        </div>
+                        <div className="space-y-4">
+                          {(repo.funder1 || repo.grant_number1_1 || repo.grant_number1_2 || repo.grant_number1_3) && (
+                            <div>
+                              <div className="font-medium text-gray-700 mb-1">Funder 1:</div>
+                              {repo.funder1 && <div className="text-gray-800 mb-1">{repo.funder1}</div>}
+                              <div className="flex flex-wrap gap-2">
+                                {repo.grant_number1_1 && <span className="inline-block bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Grant 1.1: {repo.grant_number1_1}</span>}
+                                {repo.grant_number1_2 && <span className="inline-block bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Grant 1.2: {repo.grant_number1_2}</span>}
+                                {repo.grant_number1_3 && <span className="inline-block bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Grant 1.3: {repo.grant_number1_3}</span>}
+                              </div>
+                            </div>
+                          )}
+                          {(repo.funder2 || repo.grant_number2_1 || repo.grant_number2_2 || repo.grant_number2_3) && (
+                            <div>
+                              <div className="font-medium text-gray-700 mb-1">Funder 2:</div>
+                              {repo.funder2 && <div className="text-gray-800 mb-1">{repo.funder2}</div>}
+                              <div className="flex flex-wrap gap-2">
+                                {repo.grant_number2_1 && <span className="inline-block bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Grant 2.1: {repo.grant_number2_1}</span>}
+                                {repo.grant_number2_2 && <span className="inline-block bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Grant 2.2: {repo.grant_number2_2}</span>}
+                                {repo.grant_number2_3 && <span className="inline-block bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded">Grant 2.3: {repo.grant_number2_3}</span>}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                     </div>
                   </TabsContent>
                   <TabsContent value="readme">
@@ -260,7 +303,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sky-700">Contributors - {contributors?.length}</CardTitle>
+                  <CardTitle className="text-sky-700">Contributors ({contributors?.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ContributorsScrollArea contributors={contributors || []} />
