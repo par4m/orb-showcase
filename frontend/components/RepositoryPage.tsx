@@ -85,6 +85,13 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
     /https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/([^\")\s]+)/g,
     'https://raw.githubusercontent.com/$1/$2/$3/$4'
   );
+  // Fix repository resources URLs
+  result = result.replace(/\]\(([^http]\S*)\)/gi, (match) => {
+    // console.log(match);
+    const cleanPath = match.substring(2, match.length-1);
+    return `](https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}/${cleanPath})`;
+  });
+  console.log(markdown)
   return result;
 }
 
