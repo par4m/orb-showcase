@@ -188,6 +188,9 @@ jobs:
         run: |
           python .github/scripts/move_submission.py "${{ steps.merged-files.outputs.files }}" "approved"
 
+      - name: Set up PAT for pushing
+        run: git config --global url."https://${{ secrets.ACTIONS_PAT }}@github.com/".insteadOf "https://github.com/"
+
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
@@ -226,6 +229,9 @@ jobs:
       - name: Move submission to rejected
         run: |
           python .github/scripts/move_submission.py "${{ steps.pr-files.outputs.files }}" "rejected"
+
+      - name: Set up PAT for pushing
+        run: git config --global url."https://${{ secrets.ACTIONS_PAT }}@github.com/".insteadOf "https://github.com/"
 
       - name: Commit changes
         run: |
