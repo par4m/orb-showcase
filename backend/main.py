@@ -11,6 +11,10 @@ import uuid
 import base64
 from datetime import datetime
 from urllib.parse import urlparse
+import jwt  # PyJWT
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+import time
  
 app = FastAPI()
 
@@ -296,9 +300,42 @@ async def check_repository_exists(repository_url: str) -> bool:
         return False
 
 
+# Helper to get GitHub App installation token
+async def get_github_app_installation_token():
+    app_id = os.getenv("GITHUB_APP_ID")
+    installation_id = os.getenv("GITHUB_INSTALLATION_ID")
+    private_key_path = os.getenv("GITHUB_APP_PRIVATE_KEY_PATH")
+    if not (app_id and installation_id and private_key_path):
+        raise Exception("GitHub App ID, Installation ID, or Private Key Path not set in environment variables.")
+
+    with open(private_key_path, "rb") as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+            backend=default_backend()
+        )
+    now = int(time.time())
+    payload = {
+        "iat": now - 60,
+        "exp": now + (10 * 60),
+        "iss": app_id
+    }
+    jwt_token = jwt.encode(payload, private_key, algorithm="RS256")
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Accept": "application/vnd.github+json"
+    }
+    # Get installation access token
+    url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers)
+        response.raise_for_status()
+        return response.json()["token"]
+
+
 async def create_github_pr(submission: RepositorySubmissionRequest, submission_id: str, repo_full_name: str) -> str | None:
     """
-    Create a GitHub PR with the repository submission data.
+    Create a GitHub PR with the repository submission data using GitHub App authentication.
     """
     try:
         # Create submission data structure
@@ -326,23 +363,16 @@ async def create_github_pr(submission: RepositorySubmissionRequest, submission_i
             "grant_number2_2": submission.grant_number2_2,
             "grant_number2_3": submission.grant_number2_3,
         }
-        
-        # GitHub PR creation
-        github_token = os.getenv("GITHUB_TOKEN")
-        repo_owner = os.getenv("GITHUB_REPO_OWNER", "UC-OSPO-Network")  
+
+        # Get GitHub App installation token
+        github_token = await get_github_app_installation_token()
+        repo_owner = os.getenv("GITHUB_REPO_OWNER", "UC-OSPO-Network")
         repo_name = os.getenv("GITHUB_REPO_NAME", "orb-showcase")
-        
-        if github_token:
-            # Create GitHub PR with submission data
-            return await create_actual_github_pr(
-                submission_data, submission_id, repo_owner, repo_name, github_token
-            )
-        else:
-            # No GitHub token - save locally for manual processing
-            await save_submission_locally(submission_data, submission_id)
-            print(f"Submission saved locally: {submission_id}")
-            return None
-            
+
+        # Create GitHub PR with submission data
+        return await create_actual_github_pr(
+            submission_data, submission_id, repo_owner, repo_name, github_token
+        )
     except Exception as e:
         print(f"GitHub PR creation error: {e}")
         return None

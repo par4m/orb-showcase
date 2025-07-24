@@ -7,6 +7,8 @@ on:
       - 'data/submissions/pending/**'
   pull_request_review:
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-bot-checks]
 
 env:
   POSTGRES_DB_URL: ${{ secrets.POSTGRES_DB_URL }}
@@ -21,6 +23,7 @@ jobs:
   validate-submission:
     name: Validate Submission
     runs-on: ubuntu-latest
+    if: github.event_name != 'repository_dispatch'
     
     steps:
       - name: Checkout code
@@ -117,6 +120,36 @@ jobs:
               repo: context.repo.repo,
               body: comment
             });
+
+  validate-submission-dispatch:
+    name: Validate Submission (Bot Dispatch)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'run-bot-checks'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install jsonschema requests psycopg2-binary python-dotenv
+
+      - name: Validate submission files (from dispatch)
+        run: |
+          # Expecting PR number and branch in client_payload
+          echo "PR number: ${{ github.event.client_payload.pr_number }}"
+          echo "Branch: ${{ github.event.client_payload.branch }}"
+          # You may need to fetch the PR and changed files here using the GitHub API
+          # For simplicity, you can re-run the validation scripts on the branch or files as needed
+          # Example: fetch files and run validation
+          # (You may want to implement a script to do this based on your needs)
+          echo "Repository dispatch triggered. Implement file validation logic here."
 
   process-approval:
     name: Process Approved Submission
