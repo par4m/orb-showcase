@@ -3,6 +3,8 @@ name: Process Repository Submission
 on:
   pull_request:
     types: [opened, synchronize, closed]
+    paths:
+      - 'data/submissions/pending/**'
   pull_request_review:
   workflow_dispatch:
 
@@ -50,7 +52,7 @@ jobs:
           echo "All changed files:"
           echo "$all_files"
           
-          files=$(echo "$all_files" | grep 'data/submissions/pending/' || echo "")
+          files=$(echo "$all_files" | grep 'data/submissions/pending/.*\.json$' || echo "")
           echo "files=$files" >> $GITHUB_OUTPUT
           echo "Submission files found: $files"
           
