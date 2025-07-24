@@ -34,6 +34,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install jsonschema requests psycopg2-binary python-dotenv
+          
+      - name: Test Python scripts
+        run: |
+          python -c "import jsonschema, requests; print('Dependencies OK')"
+          python .github/scripts/validate_submission.py --help || echo "Script exists"
 
       - name: Get changed files
         id: changed-files

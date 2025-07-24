@@ -6,6 +6,7 @@ Validate repository submission files against JSON schema
 import json
 import sys
 import os
+import re
 from pathlib import Path
 import jsonschema
 
@@ -48,7 +49,6 @@ def validate_submission_file(file_path):
                 results.append(f"❌ {file_path}: Missing or empty required field: {field}")
         
         # Validate email format
-        import re
         email = submission.get('submitter_email', '')
         if email and not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
             results.append(f"❌ {file_path}: Invalid email format: {email}")
