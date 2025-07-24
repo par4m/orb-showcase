@@ -15,6 +15,7 @@ import jwt  # PyJWT
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 import time
+import requests  # For dispatch event
  
 app = FastAPI()
 
@@ -212,6 +213,24 @@ def get_organizations(session: Session = Depends(get_session)):
     return sorted([owner for owner in result if owner])
 
 
+def trigger_repository_dispatch(repo_owner, repo_name, github_token, pr_number, branch_name):
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/dispatches"
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github+json"
+    }
+    data = {
+        "event_type": "run-bot-checks",
+        "client_payload": {
+            "pr_number": pr_number,
+            "branch": branch_name
+        }
+    }
+    response = requests.post(url, headers=headers, json=data)
+    print("Dispatch status:", response.status_code, response.text)
+    return response.status_code == 204
+
+
 @app.post("/submit-repository", response_model=RepositorySubmissionResponse)
 async def submit_repository(submission: RepositorySubmissionRequest):
     """
@@ -256,7 +275,28 @@ async def submit_repository(submission: RepositorySubmissionRequest):
         
         # Create GitHub PR with submission data
         pr_url = await create_github_pr(submission, submission_id, repo_full_name)
-        
+
+        # After PR creation, trigger repository_dispatch event
+        # Extract PR number and branch name from the PR URL or response
+        # (You may want to return these from create_github_pr for more robust handling)
+        # For now, fetch the latest PR for this branch
+        github_token = await get_github_app_installation_token()
+        repo_owner = os.getenv("GITHUB_REPO_OWNER", "UC-OSPO-Network")
+        repo_name = os.getenv("GITHUB_REPO_NAME", "orb-showcase")
+        branch_name = None
+        pr_number = None
+        if pr_url:
+            # Fetch PR info to get number and branch
+            api_url = pr_url.replace("https://github.com/", "https://api.github.com/repos/").replace("/pull/", "/pulls/")
+            headers = {"Authorization": f"token {github_token}", "Accept": "application/vnd.github+json"}
+            resp = requests.get(api_url, headers=headers)
+            if resp.status_code == 200:
+                pr_data = resp.json()
+                pr_number = pr_data["number"]
+                branch_name = pr_data["head"]["ref"]
+        if pr_number and branch_name:
+            trigger_repository_dispatch(repo_owner, repo_name, github_token, pr_number, branch_name)
+
         return RepositorySubmissionResponse(
             message="Repository submission received! A pull request has been created for review.",
             pr_url=pr_url,
