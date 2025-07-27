@@ -129,6 +129,7 @@ function ReadmeViewer({ source, repoOwner, repoName, branch }: ReadmeViewerProps
   );
 }
 
+
 function useOrgInfo(org: string | undefined) {
   const [orgInfo, setOrgInfo] = useState<{ blog?: string; html_url?: string } | null>(null);
   useEffect(() => {
@@ -269,6 +270,37 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                     <span>{repo.subscribers_count} views</span>
                   </div>
                 </div>
+
+              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sky-700">Description</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p>{repo.description}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sky-700">README</CardTitle>
+                </CardHeader>
+                <div className="max-w-4xl w-full overflow-x-auto">
+                  <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
+                </div>
+              </Card>
+            </div>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sky-700">Repository Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {repo.owner && (
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm">{repo.owner}</span>
+                    </div>
+                  )}
                   {repo.created_at && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-500" />
