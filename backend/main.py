@@ -130,10 +130,6 @@ def list_repositories(
     for repo, contributors_count in results:
         repo_dict = repo.dict()
         repo_dict['contributors'] = contributors_count
-        # Convert datetime fields to ISO string for Pydantic
-        for dt_field in ["created_at", "updated_at", "pushed_at"]:
-            if dt_field in repo_dict and hasattr(repo_dict[dt_field], "isoformat"):
-                repo_dict[dt_field] = repo_dict[dt_field].isoformat()
         response.append(RepositoryResponse(**repo_dict))
     return response
 
@@ -163,10 +159,6 @@ def get_repository(id: int, session: Session = Depends(get_session)):
     repo, contributors_count = row
     repo_dict = repo.dict()
     repo_dict['contributors'] = contributors_count
-    # Convert datetime fields to ISO string for Pydantic
-    for dt_field in ["created_at", "updated_at", "pushed_at"]:
-        if dt_field in repo_dict and hasattr(repo_dict[dt_field], "isoformat"):
-            repo_dict[dt_field] = repo_dict[dt_field].isoformat()
     return RepositoryResponse(**repo_dict)
 
 
