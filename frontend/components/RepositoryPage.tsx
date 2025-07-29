@@ -85,13 +85,35 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
     /https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/([^\")\s]+)/g,
     'https://raw.githubusercontent.com/$1/$2/$3/$4'
   );
+
+  result = fixRepoResourceUrls(markdown, repoOwner, repoName, safeBranch)
+  
+  return result;
+}
+
+function fixRepoResourceUrls(markdown: string, repoOwner: string, repoName: string, branch?: string ) {
+  const safeBranch = branch || "main";
   // Fix repository resources URLs
-  result = result.replace(/\]\(([^http]\S*)\)/gi, (match) => {
-    // console.log(match);
-    const cleanPath = match.substring(2, match.length-1);
-    return `](https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}/${cleanPath})`;
+  let result = markdown.replace(/\]\(([^http]\S+[^\)])\)/gi, (match, raw_resource) => {
+    const leading_chars = raw_resource.substring(0,2);
+    let potential_resource = raw_resource;
+    if (leading_chars === "./") {
+      potential_resource = raw_resource.substring(2);
+    } else if (leading_chars[0] === "/") {
+      potential_resource = raw_resource.substring(1);
+    }
+    const resource = potential_resource
+    const url = `https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}/${resource}`;
+    console.log("match", match, "group", raw_resource, url);
+    return `](${url})`;
   });
-  console.log(markdown)
+
+  // Fixing link definitions that point to repository resources URLs
+  result = result.replace(/(\[\S*\]\:)\s*([^\s&^http&^mailto]\S*)/gi, (_, variable, value) => {
+    const url = `https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}`
+    return `${variable} ${url}/${value}`;
+  });
+
   return result;
 }
 
