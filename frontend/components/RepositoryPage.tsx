@@ -95,26 +95,31 @@ function fixRepoResourceUrls(markdown: string, repoOwner: string, repoName: stri
   const safeBranch = branch || "main";
   // Fix repository resources URLs
   let result = markdown.replace(/\]\(([^http]\S+[^\)])\)/gi, (match, raw_resource) => {
-    const leading_chars = raw_resource.substring(0,2);
-    let potential_resource = raw_resource;
-    if (leading_chars === "./") {
-      potential_resource = raw_resource.substring(2);
-    } else if (leading_chars[0] === "/") {
-      potential_resource = raw_resource.substring(1);
-    }
-    const resource = potential_resource
+    const resource = getFormattedRepoResource(raw_resource);
     const url = `https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}/${resource}`;
     console.log("match", match, "group", raw_resource, url);
     return `](${url})`;
   });
 
   // Fixing link definitions that point to repository resources URLs
-  result = result.replace(/(\[\S*\]\:)\s*([^\s&^http&^mailto]\S*)/gi, (_, variable, value) => {
+  result = result.replace(/(\[\S*\]\:)\s*([^\s&^http&^mailto]\S*)/gi, (_, variable, raw_resource) => {
+    const resource = getFormattedRepoResource(raw_resource);
     const url = `https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}`
-    return `${variable} ${url}/${value}`;
+    return `${variable} ${url}/${resource}`;
   });
 
   return result;
+}
+
+function getFormattedRepoResource(raw_resource: string) {
+  const leading_chars = raw_resource.substring(0,2);
+  let potential_resource = raw_resource;
+  if (leading_chars === "./") {   
+    potential_resource = raw_resource.substring(2);
+  } else if (leading_chars[0] === "/") {
+    potential_resource = raw_resource.substring(1);
+  }
+  return potential_resource;
 }
 
 function ReadmeViewer({ source, repoOwner, repoName, branch }: ReadmeViewerProps) {
