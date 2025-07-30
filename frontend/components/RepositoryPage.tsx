@@ -86,7 +86,7 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
     'https://raw.githubusercontent.com/$1/$2/$3/$4'
   );
 
-  result = fixRepoResourceUrls(markdown, repoOwner, repoName, safeBranch)
+  result = fixRepoResourceUrls(result, repoOwner, repoName, safeBranch)
   
   return result;
 }
@@ -94,10 +94,9 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
 function fixRepoResourceUrls(markdown: string, repoOwner: string, repoName: string, branch?: string ) {
   const safeBranch = branch || "main";
   // Fix repository resources URLs
-  let result = markdown.replace(/\]\(([^http]\S+[^\)])\)/gi, (match, raw_resource) => {
+  let result = markdown.replace(/\]\(((?!http)\S+[^\)])\)/gi, (match, raw_resource) => {
     const resource = getFormattedRepoResource(raw_resource);
     const url = `https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}/${resource}`;
-    console.log("match", match, "group", raw_resource, url);
     return `](${url})`;
   });
 
