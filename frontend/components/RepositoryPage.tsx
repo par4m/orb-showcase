@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User, University, School } from "lucide-react";
+import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User, University, School, FileText } from "lucide-react";
 import Link from "next/link";
 import { ContributorsScrollArea } from "@/components/ContributorsScrollArea";
 
@@ -129,6 +129,110 @@ function ReadmeViewer({ source, repoOwner, repoName, branch }: ReadmeViewerProps
   );
 }
 
+interface LicenseViewerProps {
+  repoOwner: string;
+  repoName: string;
+  branch?: string;
+}
+
+function LicenseViewer({ repoOwner, repoName, branch }: LicenseViewerProps) {
+  const [licenseContent, setLicenseContent] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLicense = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // First, get the license info from GitHub API
+        const licenseUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/license`;
+        const licenseResponse = await fetch(licenseUrl);
+        
+        if (!licenseResponse.ok) {
+          throw new Error('License not found');
+        }
+        
+        const licenseData = await licenseResponse.json();
+        
+        if (!licenseData.download_url) {
+          throw new Error('License download URL not available');
+        }
+        
+        // Fetch the actual license content
+        const contentResponse = await fetch(licenseData.download_url);
+        
+        if (!contentResponse.ok) {
+          throw new Error('Failed to fetch license content');
+        }
+        
+        const content = await contentResponse.text();
+        setLicenseContent(content);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load license');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (repoOwner && repoName) {
+      fetchLicense();
+    }
+  }, [repoOwner, repoName, branch]);
+
+  if (isLoading) {
+    return (
+      <div className="p-4">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-gray-500">
+        <div className="flex items-center gap-2 mb-2">
+          {/* <FileText className="w-5 h-5" /> */}
+          {/* <span className="font-medium">License</span> */}
+        </div>
+        <p>Unable to load license: {error}</p>
+      </div>
+    );
+  }
+
+  if (!licenseContent) {
+    return (
+      <div className="p-4 text-gray-500">
+        <div className="flex items-center gap-2 mb-2">
+          {/* <FileText className="w-5 h-5" /> */}
+          {/* <span className="font-medium">License</span> */}
+        </div>
+        <p>No license content available.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <div className="flex items-center gap-2 mb-4">
+        {/* <FileText className="w-5 h-5 text-sky-600" /> */}
+        {/* <span className="font-medium text-sky-800">License</span> */}
+      </div>
+      <div className="bg-gray-50  border-gray-200 rounded-lg p-4">
+        <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono overflow-x-auto">
+          {licenseContent}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
 function useOrgInfo(org: string | undefined) {
   const [orgInfo, setOrgInfo] = useState<{ blog?: string; html_url?: string } | null>(null);
   useEffect(() => {
@@ -145,6 +249,10 @@ function useOrgInfo(org: string | undefined) {
 export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
   const branch = repo.default_branch || "main";
   const orgInfo = useOrgInfo(repo.owner);
+  const [activeTab, setActiveTab] = useState("readme");
+
+  // Determine if license tab should be shown
+  const showLicenseTab = repo.license && repo.license !== "Other";
 
   return (
     <div className="flex flex-col">
@@ -155,6 +263,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
               <div>
                 <h1 className="text-3xl font-bold text-sky-800 mb-2">{repo.full_name}</h1>
                 <p className="text-lg text-gray-600 mb-4">{repo.description}</p>
+                <div className="flex gap-4 mb-4">
                 {repo.topic_area_ai && (
                         <div className="flex items-center gap-2">
                            
@@ -163,47 +272,29 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                           </Badge>
                         </div>
                       )}
-                {/* <div className="flex flex-wrap gap-2 mb-6">
-                  {repo.language && <Badge variant="outline" className="text-sm">{repo.language}</Badge>}
-                  {repo.license && <Badge variant="secondary" className="text-sm">{repo.license}</Badge>}
-                  {repo.university && <Badge variant="secondary" className="text-sm">{getUniversityDisplayName(repo.university)}</Badge>}
-                </div> */}
-              
-              </div>
-              <Card className="w-full max-w-full min-w-0 flex-shrink-0">
-                <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="w-full flex border-b border-gray-200 p-0 gap-0 bg-white">
-                    <TabsTrigger value="overview" className="flex-1 h-10 m-0 rounded-none bg-transparent whitespace-nowrap data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">Overview</TabsTrigger>
-                    <TabsTrigger value="readme" className="flex-1 h-10 m-0 rounded-none bg-transparent whitespace-nowrap data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">README</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="overview">
-                    <div className="p-4 space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">Development Team:</span>
-                        <a href={orgInfo?.html_url} target="_blank" rel="noopener noreferrer" className="text-sky-600">{repo.owner} </a>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Code className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">License:</span>
-                        <span className="text-md">{repo.license || "-"}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <School className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">University:</span>
-                        <span className="text-md">{getUniversityDisplayName(repo.university) || "-"}</span>
-                      </div>
-                  
-                      <div className="flex items-center gap-2">
-                        <ExternalLink className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">External Links:</span>
-                        <span className="flex flex-col gap-1">
-              
-                          {orgInfo?.blog && orgInfo.blog !== "" && (
-                            <a href={orgInfo.blog} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline">Website</a>
-                          )}
-                        </span>
-                      </div>
+                 
+                  <div className="flex items-center gap-1">
+                    <Badge variant="secondary" className="text-sm bg-yellow-100 text-yellow-800 border-yellow-200">
+                      <Star className="w-3 h-3 mr-1" />
+                      {repo.stargazers_count} stars
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="secondary" className="text-sm bg-blue-100 text-blue-800 border-blue-200">
+                      <GitFork className="w-3 h-3 mr-1" />
+                      {repo.forks_count} forks
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="secondary" className="text-sm bg-green-100 text-green-800 border-green-200">
+                      <Eye className="w-3 h-3 mr-1" />
+                      {repo.subscribers_count} views
+                    </Badge>
+                  </div>
+                </div>
+             
+                <div>
+                      
                   {/* Funders and Grant Details */}
                   {(repo.funder1 || repo.grant_number1_1 || repo.grant_number1_2 || repo.grant_number1_3 || repo.funder2 || repo.grant_number2_1 || repo.grant_number2_2 || repo.grant_number2_3) && (
                     <div className="mt-6">
@@ -240,12 +331,31 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                     </div>
                   )}
                     </div>
-                  </TabsContent>
+              
+              </div>
+              <Card className="w-full max-w-full min-w-0 flex-shrink-0">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="w-full flex border-b border-gray-200 p-0 gap-0 bg-white">
+                    <TabsTrigger value="readme" className="flex-1 h-10 m-0 rounded-none bg-transparent whitespace-nowrap data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">README</TabsTrigger>
+                    {showLicenseTab && (
+                      <TabsTrigger value="license" className="flex-1 h-10 m-0 rounded-none bg-transparent whitespace-nowrap data-[state=active]:bg-sky-100 data-[state=active]:text-sky-800 data-[state=active]:z-10 data-[state=active]:rounded-t-md data-[state=active]:shadow-none transition-colors transition-border">        <FileText className="w-5 h-5 text-sky-600 mr-1" />
+ LICENSE</TabsTrigger>
+                    )}
+                  </TabsList>
+                
                   <TabsContent value="readme">
                     <div className="max-w-4xl w-full overflow-x-auto">
                       <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
                     </div>
                   </TabsContent>
+                  
+                  {showLicenseTab && (
+                    <TabsContent value="license">
+                      <div className="max-w-4xl w-full overflow-x-auto">
+                        <LicenseViewer repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
+                      </div>
+                    </TabsContent>
+                  )}
                 </Tabs>
               </Card>
             </div>
@@ -255,38 +365,45 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                   <CardTitle className="text-sky-700">Repository Info</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex gap-4 mb-4">
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <Star className="w-4 h-4" />
-                    <span>{repo.stargazers_count} stars</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <GitFork className="w-4 h-4" />
-                    <span>{repo.forks_count} forks</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <Eye className="w-4 h-4" />
-                    <span>{repo.subscribers_count} views</span>
-                  </div>
-                </div>
+
+                <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">Development Team:</span>
+                        <a href={orgInfo?.blog || orgInfo?.html_url} target="_blank" rel="noopener noreferrer" className="text-sky-600">{repo.owner} </a>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Code className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">License:</span>
+                        <span className="text-md">{repo.license || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <School className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">University:</span>
+                        <span className="text-md">{getUniversityDisplayName(repo.university) || "-"}</span>
+                      </div>
+                  
+                      {repo.language && (
+                    <div className="flex items-center gap-2">
+                      <Code className="w-4 h-4 text-gray-500" />
+                      <span className="font-medium">Language:</span>
+                      <span className="text-md">{repo.language}</span>
+                    </div>
+                  )}
+                    
                   {repo.created_at && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-500" />
-                       <span className="text-sm truncate break-all max-w-xs">
-                         Created {repo.created_at ? repo.created_at.split(/[ T]/)[0] : ""}
+                       <span className="text-md truncate break-all max-w-xs">
+                       <span className="font-medium">Created:</span> {repo.created_at ? repo.created_at.split(/[ T]/)[0] : ""}
                        </span>
                     </div>
                   )}
-                  {repo.language && (
-                    <div className="flex items-center gap-2">
-                      <Code className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">{repo.language}</span>
-                    </div>
-                  )}
+            
                   {repo.homepage && (
                     <div className="flex items-center gap-2">
                       <ExternalLink className="w-4 h-4 text-gray-500" />
-                      <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline"><span className="text-sm">{repo.homepage}</span></a>
+                      <span className="font-medium">Website:</span>
+                      <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="text-sky-600"><span className="text-sm">{repo.homepage}</span></a>
                     </div>
                   )}
                   {repo.html_url && (
