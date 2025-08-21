@@ -96,7 +96,40 @@ function fixImageUrls(markdown: string, repoOwner: string, repoName: string, bra
     /https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/([^\")\s]+)/g,
     'https://raw.githubusercontent.com/$1/$2/$3/$4'
   );
+
+  result = fixRepoResourceUrls(result, repoOwner, repoName, safeBranch)
+  
   return result;
+}
+
+function fixRepoResourceUrls(markdown: string, repoOwner: string, repoName: string, branch?: string ) {
+  const safeBranch = branch || "main";
+  // Fix repository resources URLs
+  let result = markdown.replace(/\]\(((?!http)\S+[^\)])\)/gi, (match, raw_resource) => {
+    const resource = getFormattedRepoResource(raw_resource);
+    const url = `https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}/${resource}`;
+    return `](${url})`;
+  });
+
+  // Fixing link definitions that point to repository resources URLs
+  result = result.replace(/(\[\S*\]\:)\s*([^\s&^http&^mailto]\S*)/gi, (_, variable, raw_resource) => {
+    const resource = getFormattedRepoResource(raw_resource);
+    const url = `https://github.com/${repoOwner}/${repoName}/tree/${safeBranch}`
+    return `${variable} ${url}/${resource}`;
+  });
+
+  return result;
+}
+
+function getFormattedRepoResource(raw_resource: string) {
+  const leading_chars = raw_resource.substring(0,2);
+  let potential_resource = raw_resource;
+  if (leading_chars === "./") {   
+    potential_resource = raw_resource.substring(2);
+  } else if (leading_chars[0] === "/") {
+    potential_resource = raw_resource.substring(1);
+  }
+  return potential_resource;
 }
 
 function ReadmeViewer({ source, repoOwner, repoName, branch }: ReadmeViewerProps) {
@@ -233,6 +266,7 @@ function LicenseViewer({ repoOwner, repoName, branch }: LicenseViewerProps) {
   );
 }
 
+
 function useOrgInfo(org: string | undefined) {
   const [orgInfo, setOrgInfo] = useState<{ blog?: string; html_url?: string } | null>(null);
   useEffect(() => {
@@ -366,6 +400,7 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                 </CardHeader>
                 <CardContent className="space-y-4">
 
+
                 <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-gray-500" />
                         <span className="font-medium">Development Team:</span>
@@ -383,6 +418,55 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                       </div>
                   
                       {repo.language && (
+
+                    <div className="flex gap-4 mb-4">
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Star className="w-4 h-4" />
+                    <span>{repo.stargazers_count} stars</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <GitFork className="w-4 h-4" />
+                    <span>{repo.forks_count} forks</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Eye className="w-4 h-4" />
+                    <span>{repo.subscribers_count} views</span>
+                  </div>
+                </div>
+
+              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sky-700">Description</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p>{repo.description}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sky-700">README</CardTitle>
+                </CardHeader>
+                <div className="max-w-4xl w-full overflow-x-auto">
+                  <ReadmeViewer source={repo.readme} repoOwner={repo.owner || ""} repoName={repo.full_name?.split("/").pop() || ""} branch={branch} />
+                </div>
+              </Card>
+            </div>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sky-700">Repository Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {repo.owner && (
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm">{repo.owner}</span>
+                    </div>
+                  )}
+                  
+                  {repo.created_at && (
+
                     <div className="flex items-center gap-2">
                       <Code className="w-4 h-4 text-gray-500" />
                       <span className="font-medium">Language:</span>

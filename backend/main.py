@@ -142,6 +142,7 @@ def list_repositories(
     response = []
     for repo in results:
         repo_dict = repo.dict()
+
         # Overwrite description with short_description
         repo_dict["description"] = repo_dict.get("short_description")
         repo_dict.pop("short_description", None)
@@ -149,6 +150,7 @@ def list_repositories(
         for dt_field in ["created_at", "updated_at", "pushed_at"]:
             if dt_field in repo_dict and hasattr(repo_dict[dt_field], "isoformat"):
                 repo_dict[dt_field] = repo_dict[dt_field].isoformat()
+
         response.append(RepositoryResponse(**repo_dict))
     return response
 
@@ -174,6 +176,7 @@ def get_repository(id: str, session: Session = Depends(get_session)):
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found")
     repo_dict = repo.dict()
+
     # Overwrite description with short_description
     repo_dict["description"] = repo_dict.get("short_description")
     repo_dict.pop("short_description", None)
@@ -181,6 +184,7 @@ def get_repository(id: str, session: Session = Depends(get_session)):
     for dt_field in ["created_at", "updated_at", "pushed_at"]:
         if dt_field in repo_dict and hasattr(repo_dict[dt_field], "isoformat"):
             repo_dict[dt_field] = repo_dict[dt_field].isoformat()
+
     return RepositoryResponse(**repo_dict)
 
 
