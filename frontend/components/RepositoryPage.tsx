@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User, University, School, FileText } from "lucide-react";
+import {Eye, ArrowLeft, Star, GitFork, Download, ExternalLink, Users, Calendar, Code, User, University, School, FileText, Mail } from "lucide-react";
 import Link from "next/link";
 import { ContributorsScrollArea } from "@/components/ContributorsScrollArea";
 
@@ -33,6 +33,12 @@ export interface Repository {
   readme?: string;
   default_branch?: string;
   topic_area_ai?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_name2?: string;
+  contact_email2?: string;
+  contact_name3?: string;
+  contact_email3?: string;
   funder1?: string;
   grant_number1_1?: string;
   grant_number1_2?: string;
@@ -254,6 +260,22 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
   // Determine if license tab should be shown
   const showLicenseTab = repo.license && repo.license !== "Other";
 
+  // Helper function to get primary contact with fallback logic
+  const getPrimaryContact = () => {
+    if (repo.contact_name && repo.contact_email) {
+      return { name: repo.contact_name, email: repo.contact_email };
+    }
+    if (repo.contact_name2 && repo.contact_email2) {
+      return { name: repo.contact_name2, email: repo.contact_email2 };
+    }
+    if (repo.contact_name3 && repo.contact_email3) {
+      return { name: repo.contact_name3, email: repo.contact_email3 };
+    }
+    return null;
+  };
+
+  const primaryContact = getPrimaryContact();
+
   return (
     <div className="flex flex-col">
       <main className="flex-1 py-4">
@@ -406,6 +428,17 @@ export const RepositoryPage: React.FC<Props> = ({ repo, contributors}) => {
                       <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="text-sky-600"><span className="text-sm">{repo.homepage}</span></a>
                     </div>
                   )}
+
+                  {primaryContact && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-500" />
+                      <span className="font-medium">Contact:</span>
+                      <a href={`mailto:${primaryContact.email}`} className="text-sky-600">
+                        <span className="text-sm">{primaryContact.name} ({primaryContact.email})</span>
+                      </a>
+                    </div>
+                  )}
+
                   {repo.html_url && (
                     <div className="pt-4">
                       <Link href={repo.html_url} target="_blank" rel="noopener noreferrer">
