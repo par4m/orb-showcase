@@ -1,38 +1,40 @@
 import { Input } from "@/components/ui/input";
 import { getUniversityDisplayName } from "@/lib/universities";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import React from "react";
+import { MultiSelectCombobox } from "@/components/ui/MultiSelectCombobox";
 
 interface RepositoryFiltersProps {
   searchTerm: string;
   setSearchTerm: (v: string) => void;
-  university: string;
-  setUniversity: (v: string) => void;
-  language: string;
-  setLanguage: (v: string) => void;
-  license: string;
-  setLicense: (v: string) => void;
-  owner: string;
-  setOwner: (v: string) => void;
+  universitiesSelected: string[];
+  setUniversitiesSelected: (v: string[]) => void;
+  languagesSelected: string[];
+  setLanguagesSelected: (v: string[]) => void;
+  licensesSelected: string[];
+  setLicensesSelected: (v: string[]) => void;
+  ownersSelected: string[];
+  setOwnersSelected: (v: string[]) => void;
   universities: string[];
   languages: string[];
   licenses: string[];
   organizations: string[];
   onApplyFilters: () => void;
+  onResetFilters: () => void;
 }
 
 export const RepositoryFilters: React.FC<RepositoryFiltersProps> = ({
   searchTerm, setSearchTerm,
-  university, setUniversity,
-  language, setLanguage,
-  license, setLicense,
-  owner, setOwner,
+  universitiesSelected, setUniversitiesSelected,
+  languagesSelected, setLanguagesSelected,
+  licensesSelected, setLicensesSelected,
+  ownersSelected, setOwnersSelected,
   universities = [],
   languages = [],
   licenses = [],
   organizations = [],
   onApplyFilters,
+  onResetFilters,
 }) => (
   <div className="space-y-6">
     <div>
@@ -43,64 +45,44 @@ export const RepositoryFilters: React.FC<RepositoryFiltersProps> = ({
         onChange={(e) => setSearchTerm(e.target.value)}
       />
     </div>
-    <div>
-      <h3 className="font-medium mb-2">University</h3>
-      <Select value={university} onValueChange={setUniversity}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select university" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All Universities</SelectItem>
-          {universities.map((uni) => (
-            <SelectItem key={uni} value={uni}>{getUniversityDisplayName(uni)}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-    <div>
-      <h3 className="font-medium mb-2">Language</h3>
-      <Select value={language} onValueChange={setLanguage}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select language" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All Languages</SelectItem>
-          {languages.map((lang) => (
-            <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-    <div>
-      <h3 className="font-medium mb-2">License</h3>
-      <Select value={license} onValueChange={setLicense}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select license" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All Licenses</SelectItem>
-          {licenses.map((lic) => (
-            <SelectItem key={lic} value={lic}>{lic}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-    <div>
-      <h3 className="font-medium mb-2">Development Team</h3>
-      <Select value={owner} onValueChange={setOwner}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select Development Team" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All Development Teams</SelectItem>
-          {organizations.map((org) => (
-            <SelectItem key={org} value={org}>{org}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <MultiSelectCombobox
+      options={universities}
+      selected={universitiesSelected}
+      setSelected={setUniversitiesSelected}
+      placeholder="All Universities"
+      label="Universities"
+      getLabel={getUniversityDisplayName}
+      allLabel="All Universities"
+    />
+    <MultiSelectCombobox
+      options={languages}
+      selected={languagesSelected}
+      setSelected={setLanguagesSelected}
+      placeholder="All Languages"
+      label="Languages"
+      allLabel="All Languages"
+    />
+    <MultiSelectCombobox
+      options={licenses}
+      selected={licensesSelected}
+      setSelected={setLicensesSelected}
+      placeholder="All Licenses"
+      label="Licenses"
+      allLabel="All Licenses"
+    />
+    <MultiSelectCombobox
+      options={organizations}
+      selected={ownersSelected}
+      setSelected={setOwnersSelected}
+      placeholder="All Development Teams"
+      label="Development Teams"
+      allLabel="All Development Teams"
+    />
     <Button className="w-full" onClick={onApplyFilters}>
       Apply Filters
+    </Button>
+    <Button className="w-full" variant="outline" onClick={onResetFilters}>
+      Reset Filters
     </Button>
   </div>
 );

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRepositoriesStore } from "@/store/repositories";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -16,40 +16,38 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export function RepositoriesPageClient() {
   const repositories = useRepositoriesStore((state) => state.repositories);
   const setRepositories = useRepositoriesStore((state) => state.setRepositories);
+  // Use zustand for filters
+  const searchTerm = useRepositoriesStore((state) => state.searchTerm);
+  const setSearchTerm = useRepositoriesStore((state) => state.setSearchTerm);
+  const universitiesSelected = useRepositoriesStore((state) => state.universitiesSelected);
+  const setUniversitiesSelected = useRepositoriesStore((state) => state.setUniversitiesSelected);
+  const languagesSelected = useRepositoriesStore((state) => state.languagesSelected);
+  const setLanguagesSelected = useRepositoriesStore((state) => state.setLanguagesSelected);
+  const licensesSelected = useRepositoriesStore((state) => state.licensesSelected);
+  const setLicensesSelected = useRepositoriesStore((state) => state.setLicensesSelected);
+  const ownersSelected = useRepositoriesStore((state) => state.ownersSelected);
+  const setOwnersSelected = useRepositoriesStore((state) => state.setOwnersSelected);
   const searchParams = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [university, setUniversity] = useState("__all__");
-  const [language, setLanguage] = useState("__all__");
-  const [license, setLicense] = useState("__all__");
-  const [owner, setOwner] = useState("__all__");
 
   // Fetch filter options
-  const { data: universities } = useQuery({
+  const { data: universities = [] } = useQuery({
     queryKey: ["universities"],
     queryFn: () => fetch(`${API_URL}/universities`).then(res => res.json()),
-    cacheTime: 600_000, // 10 min
-    staleTime: 300_000, // 5 min
   });
-  const { data: languages } = useQuery({
+  const { data: languages = [] } = useQuery({
     queryKey: ["languages"],
     queryFn: () => fetch(`${API_URL}/languages`).then(res => res.json()),
-    cacheTime: 600_000,
-    staleTime: 300_000,
   });
-  const { data: licenses } = useQuery({
+  const { data: licenses = [] } = useQuery({
     queryKey: ["licenses"],
     queryFn: () => fetch(`${API_URL}/licenses`).then(res => res.json()),
-    cacheTime: 600_000,
-    staleTime: 300_000,
   });
-  const { data: organizations } = useQuery({
+  const { data: organizations = [] } = useQuery({
     queryKey: ["organizations"],
     queryFn: () => fetch(`${API_URL}/organizations`).then(res => res.json()),
-    cacheTime: 600_000,
-    staleTime: 300_000,
   });
 
-    // Fetch all repositories once on mount
+  // Fetch all repositories once on mount
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
 
@@ -73,19 +71,19 @@ export function RepositoriesPageClient() {
   }, [setRepositories, repositories.length]);
 
   // Sync search param to state
-  React.useEffect(() => {
+  useEffect(() => {
     const urlSearch = searchParams.get("search");
     if (urlSearch) setSearchTerm(urlSearch);
-  }, [searchParams]);
+  }, [searchParams, setSearchTerm]);
 
   // Client-side filtering (all filters and search)
   const filteredRepositories = React.useMemo(() => {
     if (!repositories) return [];
     let result = repositories;
-    if (university !== "__all__") result = result.filter(r => r.university === university);
-    if (language !== "__all__") result = result.filter(r => r.language === language);
-    if (license !== "__all__") result = result.filter(r => r.license === license);
-    if (owner !== "__all__") result = result.filter(r => r.owner === owner);
+    if (universitiesSelected.length > 0) result = result.filter(r => r.university && universitiesSelected.includes(r.university));
+    if (languagesSelected.length > 0) result = result.filter(r => r.language && languagesSelected.includes(r.language));
+    if (licensesSelected.length > 0) result = result.filter(r => r.license && licensesSelected.includes(r.license));
+    if (ownersSelected.length > 0) result = result.filter(r => r.owner && ownersSelected.includes(r.owner));
     if (searchTerm.trim()) {
       const fuzzy = fuzzysort.go(
         searchTerm,
@@ -95,12 +93,12 @@ export function RepositoriesPageClient() {
       result = fuzzy.map(r => r.obj);
     }
     return result;
-  }, [repositories, university, language, license, owner, searchTerm]);
+  }, [repositories, universitiesSelected, languagesSelected, licensesSelected, ownersSelected, searchTerm]);
 
   // Pagination state
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(20);
-  React.useEffect(() => { setPage(1); }, [searchTerm, university, language, license, owner, repositories]);
+  React.useEffect(() => { setPage(1); }, [searchTerm, universitiesSelected, languagesSelected, licensesSelected, ownersSelected, repositories]);
   const totalItems = filteredRepositories.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const pagedRepositories = React.useMemo(() =>
@@ -109,6 +107,15 @@ export function RepositoriesPageClient() {
   );
 
   const handleApplyFilters = () => {}; // No-op, all filtering is client-side
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setUniversitiesSelected([]);
+    setLanguagesSelected([]);
+    setLicensesSelected([]);
+    setOwnersSelected([]);
+    setPage(1);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -136,19 +143,20 @@ export function RepositoriesPageClient() {
               <RepositoryFilters
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
-                university={university}
-                setUniversity={setUniversity}
-                language={language}
-                setLanguage={setLanguage}
-                license={license}
-                setLicense={setLicense}
-                owner={owner}
-                setOwner={setOwner}
-                universities={universities || []}
-                languages={languages || []}
-                licenses={licenses || []}
-                organizations={organizations || []}
+                universitiesSelected={universitiesSelected}
+                setUniversitiesSelected={setUniversitiesSelected}
+                languagesSelected={languagesSelected}
+                setLanguagesSelected={setLanguagesSelected}
+                licensesSelected={licensesSelected}
+                setLicensesSelected={setLicensesSelected}
+                ownersSelected={ownersSelected}
+                setOwnersSelected={setOwnersSelected}
+                universities={universities}
+                languages={languages}
+                licenses={licenses}
+                organizations={organizations}
                 onApplyFilters={handleApplyFilters}
+                onResetFilters={handleResetFilters}
               />
             </div>
             <div className="space-y-6">
