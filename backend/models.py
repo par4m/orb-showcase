@@ -16,9 +16,11 @@ class Repository(SQLModel, table=True):
     language: str | None
     stargazers_count: str | None
     html_url: str | None
+
     forks_count: str | None
     subscribers_count: str | None
     created_at: str | None
+
     readme: str | None
     homepage: str | None
     default_branch: str | None

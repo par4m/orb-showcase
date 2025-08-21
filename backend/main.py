@@ -142,6 +142,7 @@ def list_repositories(
     response = []
     for repo in results:
         repo_dict = repo.dict()
+
         
         # Overwrite description with short_description
         repo_dict["description"] = repo_dict.get("short_description")
@@ -179,6 +180,7 @@ def get_repository(id: str, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Repository not found")
     repo_dict = repo.dict()
 
+
     # Overwrite description with short_description
     repo_dict["description"] = repo_dict.get("short_description")
     repo_dict.pop("short_description", None)
@@ -188,6 +190,7 @@ def get_repository(id: str, session: Session = Depends(get_session)):
             repo_dict[dt_field] = repo_dict[dt_field].isoformat()
 
     repo_dict['contributors'] = contributors_count
+
 
     return RepositoryResponse(**repo_dict)
 
