@@ -1,0 +1,73 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/doc/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/doc/docs",
+          "mainDocId": "intro",
+          "docs": [
+            {
+              "id": "advanced-features",
+              "path": "/doc/docs/advanced-features",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "api",
+              "path": "/doc/docs/api",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "contact",
+              "path": "/doc/docs/contact",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "contributing",
+              "path": "/doc/docs/contributing",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "database-schema",
+              "path": "/doc/docs/database-schema",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "faq",
+              "path": "/doc/docs/faq",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "frontend-components",
+              "path": "/doc/docs/frontend-components",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "intro",
+              "path": "/doc/docs/intro",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "state-management",
+              "path": "/doc/docs/state-management",
+              "sidebar": "tutorialSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "tutorialSidebar": {
+              "link": {
+                "path": "/doc/docs/intro",
+                "label": "intro"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

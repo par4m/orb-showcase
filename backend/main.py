@@ -152,14 +152,15 @@ def list_repositories(
         response.append(RepositoryResponse(**repo_dict))
     return response
 
-@app.get("/repositories/{id}", response_model=RepositoryResponse)
-def get_repository(id: str, session: Session = Depends(get_session)):
+@app.get("/repositories/{owner}/{repo}", response_model=RepositoryResponse)
+def get_repository(owner: str, repo: str, session: Session = Depends(get_session)):
     """
-    ### Get Repository by ID
-    Retrieves a repository by its unique ID.
+    ### Get Repository by Owner and Repo Name
+    Retrieves a repository by its owner and repository name.
     
     **Parameters:**
-        - `id` (int): The unique identifier of the repository.
+        - `owner` (str): The repository owner/organization name.
+        - `repo` (str): The repository name.
     
     **Returns:**
         - `RepositoryResponse`: Repository details if found.
@@ -167,13 +168,13 @@ def get_repository(id: str, session: Session = Depends(get_session)):
     **Raises:**
         - `HTTPException 404`: If the repository is not found.
     """
-    id = str(id)
-    statement = select(Repository).where(Repository.id == id, Repository.approved == True)
+    full_name = f"{owner}/{repo}"
+    statement = select(Repository).where(Repository.full_name == full_name, Repository.approved == True)
     res = session.exec(statement)
-    repo = res.first()
-    if not repo:
+    repository = res.first()
+    if not repository:
         raise HTTPException(status_code=404, detail="Repository not found")
-    repo_dict = repo.dict()
+    repo_dict = repository.dict()
     # Overwrite description with short_description
     repo_dict["description"] = repo_dict.get("short_description")
     repo_dict.pop("short_description", None)

@@ -1,0 +1,27 @@
+{
+  "id": "frontend-components",
+  "title": "Frontend Components",
+  "description": "The UC ORB Showcase frontend is built with React 19 and Next.js 15, using a component-based architecture with TypeScript for type safety. This guide covers the key components and their relationships.",
+  "source": "@site/docs/frontend-components.md",
+  "sourceDirName": ".",
+  "slug": "/frontend-components",
+  "permalink": "/doc/docs/frontend-components",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yourusername/orb-showcase/tree/main/frontend/doc/docs/docs/frontend-components.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "API Documentation",
+    "permalink": "/doc/docs/api"
+  },
+  "next": {
+    "title": "State Management",
+    "permalink": "/doc/docs/state-management"
+  }
+}

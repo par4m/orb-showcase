@@ -1,0 +1,27 @@
+{
+  "id": "contributing",
+  "title": "How to Contribute",
+  "description": "Thank you for your interest in contributing to UC ORB Showcase! We welcome contributions from the UC community and beyond.",
+  "source": "@site/docs/contributing.md",
+  "sourceDirName": ".",
+  "slug": "/contributing",
+  "permalink": "/doc/docs/contributing",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yourusername/orb-showcase/tree/main/frontend/doc/docs/docs/contributing.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Database Schema",
+    "permalink": "/doc/docs/database-schema"
+  },
+  "next": {
+    "title": "Frequently Asked Questions",
+    "permalink": "/doc/docs/faq"
+  }
+}

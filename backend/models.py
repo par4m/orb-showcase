@@ -4,8 +4,7 @@ from typing import List
 
 class Repository(SQLModel, table=True):
     __tablename__ = "showcase_view"
-    id: str | None = Field(default=None, primary_key=True)
-    full_name: str
+    full_name: str = Field(primary_key=True)
     description: str | None
     short_description: str | None
     university: str | None
@@ -41,7 +40,6 @@ class Repository(SQLModel, table=True):
 
 
 class RepositoryResponse(BaseModel):
-    id: str | None
     full_name: str
     description: str | None
     university: str | None

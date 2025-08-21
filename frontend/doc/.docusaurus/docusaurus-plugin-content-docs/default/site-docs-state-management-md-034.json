@@ -1,0 +1,27 @@
+{
+  "id": "state-management",
+  "title": "State Management",
+  "description": "The UC ORB Showcase frontend uses a combination of Zustand for global state management and TanStack Query for server state management. This approach provides optimal performance and developer experience.",
+  "source": "@site/docs/state-management.md",
+  "sourceDirName": ".",
+  "slug": "/state-management",
+  "permalink": "/doc/docs/state-management",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yourusername/orb-showcase/tree/main/frontend/doc/docs/docs/state-management.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Frontend Components",
+    "permalink": "/doc/docs/frontend-components"
+  },
+  "next": {
+    "title": "Advanced Features",
+    "permalink": "/doc/docs/advanced-features"
+  }
+}

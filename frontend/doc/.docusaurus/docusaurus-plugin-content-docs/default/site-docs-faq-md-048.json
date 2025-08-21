@@ -1,0 +1,27 @@
+{
+  "id": "faq",
+  "title": "Frequently Asked Questions",
+  "description": "General Questions",
+  "source": "@site/docs/faq.md",
+  "sourceDirName": ".",
+  "slug": "/faq",
+  "permalink": "/doc/docs/faq",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yourusername/orb-showcase/tree/main/frontend/doc/docs/docs/faq.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "sidebar_position": 7
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "How to Contribute",
+    "permalink": "/doc/docs/contributing"
+  },
+  "next": {
+    "title": "Contact Us",
+    "permalink": "/doc/docs/contact"
+  }
+}

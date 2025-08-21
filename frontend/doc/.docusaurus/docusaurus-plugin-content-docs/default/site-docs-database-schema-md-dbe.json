@@ -1,0 +1,27 @@
+{
+  "id": "database-schema",
+  "title": "Database Schema",
+  "description": "The UC ORB Showcase application uses PostgreSQL as its database backend. The schema is designed to store comprehensive repository metadata, funding information, and organizational details.",
+  "source": "@site/docs/database-schema.md",
+  "sourceDirName": ".",
+  "slug": "/database-schema",
+  "permalink": "/doc/docs/database-schema",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yourusername/orb-showcase/tree/main/frontend/doc/docs/docs/database-schema.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Advanced Features",
+    "permalink": "/doc/docs/advanced-features"
+  },
+  "next": {
+    "title": "How to Contribute",
+    "permalink": "/doc/docs/contributing"
+  }
+}
